@@ -1,0 +1,238 @@
+---
+import '~/styles/global.css';
+import DecoBars from '~/components/DecoBars.astro';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import { PROVIDER_SHORT_LABELS } from '~/lib/types';
+import type { Provider } from '~/lib/types';
+import { dict, DEFAULT_LOCALE, LOCALES, type Locale } from '~/i18n';
+import { formatDate } from '~/lib/format';
+import { COMPANY_NAME } from '~/lib/company';
+
+interface Props {
+  title?: string;
+}
+const locale = (Astro.currentLocale as Locale | undefined) ?? DEFAULT_LOCALE;
+const t = dict(locale);
+
+const { title = t.layout.title(COMPANY_NAME) } = Astro.props;
+const base = import.meta.env.BASE_URL; // has a trailing slash
+
+const description = t.layout.description(COMPANY_NAME);
+
+const providerNav = (p: Provider) => ({
+  href: getRelativeLocaleUrl(locale, `provider/${p}/`),
+  label: PROVIDER_SHORT_LABELS[locale][p],
+});
+
+const navItems = [
+  { href: getRelativeLocaleUrl(locale, ''), label: t.nav.overview },
+  providerNav('claude'),
+  providerNav('copilot'),
+  providerNav('opencode'),
+  { href: getRelativeLocaleUrl(locale, 'faq/'), label: t.nav.faq },
+];
+
+// Compare paths trailing-slash-insensitively to mark the current nav item.
+const normalize = (p: string) => (p.endsWith('/') ? p : `${p}/`);
+const current = normalize(Astro.url.pathname);
+const isActive = (href: string) => normalize(href) === current;
+
+// Strip the current locale prefix so the switcher can rebuild the path in the other locale.
+const pathWithoutLocale = Astro.url.pathname.replace(new RegExp(`^${base}(en/)?`), '');
+const switcherHref = (l: Locale) => getRelativeLocaleUrl(l, pathWithoutLocale);
+
+// Static build: evaluated once at build time, so this dates the deployment, not the visit.
+const buildDate = formatDate(
+  `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`,
+  locale,
+);
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:locale" content={locale === 'de' ? 'de_DE' : 'en_US'} />
+    {LOCALES.filter((l) => l !== locale).map((l) => (
+      <meta property="og:locale:alternate" content={l === 'de' ? 'de_DE' : 'en_US'} />
+    ))}
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href={getRelativeLocaleUrl(locale, '')} class="brand" aria-label={t.layout.homeAriaLabel}>
+          <svg class="brand-mark" viewBox="0 0 86 76" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M70.29,75.2h15.8v-28.87h-15.8v-11.58C70.29,15.55,54.55,0,35.14,0S0,15.55,0,34.74v40.46h30.88v-42.53c0-2.33,1.91-4.21,4.26-4.21s4.26,1.88,4.26,4.21v42.53h30.88Z"
+            ></path>
+          </svg>
+          <span class="brand-text">{COMPANY_NAME} <span class="brand-sub">{t.layout.brandSub}</span></span>
+        </a>
+        <nav aria-label={t.layout.navAriaLabel}>
+          <ul class="nav-list">
+            {
+              navItems.map((item) => (
+                <li>
+                  <a href={item.href} class:list={['nav-link', { active: isActive(item.href) }]}>
+                    {item.label}
+                  </a>
+                </li>
+              ))
+            }
+            <li class="locale-switcher">
+              {LOCALES.map((l, i) => (
+                <>
+                  {i > 0 && <span aria-hidden="true"> / </span>}
+                  {l === locale ? (
+                    <span class="locale-link locale-link--active">{l.toUpperCase()}</span>
+                  ) : (
+                    <a class="locale-link" href={switcherHref(l)}>{l.toUpperCase()}</a>
+                  )}
+                </>
+              ))}
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main class="app">
+      <slot />
+    </main>
+
+    <DecoBars />
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <span class="footer-meta">
+          {t.layout.footerProject(buildDate)}
+          <a class="footer-link" href={getRelativeLocaleUrl(locale, 'faq/')}>{t.nav.faq}</a>
+        </span>
+        <span class="footer-meta">{t.layout.footerCredit}</span>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style>
+  .site-header {
+    background: var(--bg-1);
+    border-bottom: 1px solid var(--neuland-light-grey);
+  }
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--fg-1);
+  }
+  .brand:hover { opacity: 1; }
+  .brand-mark {
+    width: 26px;
+    height: 23px;
+    color: var(--neuland-primary);
+    flex-shrink: 0;
+  }
+  .brand-text {
+    font-weight: var(--fw-semibold);
+    font-size: var(--t-body);
+    white-space: nowrap;
+  }
+  .brand-sub {
+    font-weight: var(--fw-book);
+    color: var(--fg-3);
+  }
+  .nav-list {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex-wrap: wrap;
+  }
+  .nav-list li { margin: 0; }
+  .nav-link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    color: var(--fg-2);
+    padding-bottom: 2px;
+    font-size: var(--t-small);
+    transition: border-color var(--ease-fast);
+  }
+  .nav-link:hover {
+    opacity: 1;
+    border-bottom-color: var(--neuland-primary-light);
+  }
+  .nav-link.active {
+    border-bottom-color: var(--neuland-primary);
+    color: var(--fg-1);
+  }
+  .locale-switcher {
+    font-size: var(--t-small);
+    color: var(--fg-3);
+  }
+  .locale-link {
+    color: var(--fg-2);
+    text-decoration: none;
+  }
+  .locale-link:hover {
+    opacity: 1;
+    color: var(--fg-1);
+  }
+  .locale-link--active {
+    color: var(--fg-1);
+    font-weight: var(--fw-semibold);
+  }
+
+  .site-footer {
+    background: var(--bg-1);
+    border-top: 1px solid var(--neuland-light-grey);
+  }
+  .footer-inner {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+    padding-top: var(--space-sm);
+    padding-bottom: var(--space-sm);
+  }
+  .footer-meta {
+    font-size: var(--t-micro);
+    color: var(--neuland-primary);
+    letter-spacing: 0.02em;
+  }
+  .footer-link {
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--ease-fast);
+  }
+  .footer-link:hover {
+    opacity: 1;
+    border-bottom-color: var(--neuland-primary);
+  }
+</style>

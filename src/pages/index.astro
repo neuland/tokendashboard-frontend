@@ -1,0 +1,13 @@
+---
+import Layout from '~/layouts/Layout.astro';
+import Header from '~/components/Header.astro';
+import Dashboard from '~/components/Dashboard.tsx';
+import { DEFAULT_LOCALE, type Locale } from '~/i18n';
+
+const locale = (Astro.currentLocale as Locale | undefined) ?? DEFAULT_LOCALE;
+---
+
+<Layout>
+  <Header faqAsterisk="claude" />
+  <Dashboard client:only="react" locale={locale} />
+</Layout>

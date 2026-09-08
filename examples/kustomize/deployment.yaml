@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tokendashboard-frontend-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tokendashboard-frontend
+  template:
+    metadata:
+      labels:
+        app: tokendashboard-frontend
+    spec:
+      imagePullSecrets:
+        - name: my-registry-token
+      containers:
+        - name: tokendashboard-frontend
+          image: my-registry.example.com/tokendashboard-frontend:latest
+          ports:
+            - containerPort: 80

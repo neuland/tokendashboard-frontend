@@ -1,0 +1,33 @@
+---
+import { FaqAsterisk, type FaqAsteriskKind } from './FaqAsterisk';
+import { dict, DEFAULT_LOCALE, type Locale } from '~/i18n';
+import { COMPANY_NAME } from '~/lib/company';
+
+interface Props {
+  title?: string;
+  lede?: string;
+  faqAsterisk?: FaqAsteriskKind;
+}
+const locale = (Astro.currentLocale as Locale | undefined) ?? DEFAULT_LOCALE;
+const t = dict(locale);
+const { title = t.header.defaultTitle, lede = t.header.defaultLede(COMPANY_NAME), faqAsterisk } = Astro.props;
+---
+
+<div class="page-intro">
+  <h1 class="ds-h1">
+    {title}
+    {faqAsterisk && <FaqAsterisk kind={faqAsterisk} locale={locale} />}
+  </h1>
+  <p class="ds-body page-intro__lede">{lede}</p>
+</div>
+
+<style>
+  .page-intro {
+    margin-bottom: var(--space-sm);
+  }
+  .page-intro__lede {
+    margin: 6px 0 0;
+    color: var(--fg-3);
+    max-width: 62ch;
+  }
+</style>

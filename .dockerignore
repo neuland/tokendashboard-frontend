@@ -1,0 +1,47 @@
+# What the image build needs from the checkout is package*.json (npm ci), src/,
+# public/, astro.config.mjs, tsconfig.json (source of the `~/` alias) and, optionally,
+# a `.env`. Everything else is kept out of the build context: it only slows the COPY
+# down and would end up in the builder layer.
+
+# Local installs and outputs — the builder stage produces its own.
+node_modules
+dist
+.astro
+test-results
+playwright-report
+*.log
+
+# Version control, editors, tooling
+.git
+.gitignore
+.github
+.devcontainer
+.idea
+.claude
+.DS_Store
+**/.DS_Store
+.nvmrc
+justfile
+
+# Tests and their configs — not run in the image
+e2e
+playwright.config.ts
+vitest.config.ts
+vitest.setup.ts
+eslint.config.js
+**/*.test.ts
+**/*.test.tsx
+src/lib/__mocks__
+src/pages/__tests__
+
+# Docs and deployment examples
+*.md
+LICENSE
+examples
+.env.example
+Dockerfile
+.dockerignore
+
+# Deliberately NOT ignored: `.env` (and `.env.production`). A local `.env` is one of
+# the two supported ways to hand PUBLIC_* values to the build; the other is
+# --build-arg, see Dockerfile.

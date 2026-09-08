@@ -1,0 +1,454 @@
+---
+import Layout from '~/layouts/Layout.astro';
+import Header from '~/components/Header.astro';
+import InstallCommand from '~/components/InstallCommand.tsx';
+import { PROVIDER_PLUGIN_CONFIG } from '~/lib/plugins';
+import { dict, DEFAULT_LOCALE, type Locale } from '~/i18n';
+import { COMPANY_NAME } from '~/lib/company';
+
+const locale = (Astro.currentLocale as Locale | undefined) ?? DEFAULT_LOCALE;
+const t = dict(locale);
+
+const METHODOLOGY_URL = 'https://arxiv.org/abs/2505.09598';
+const PRICING_URL = 'https://platform.claude.com/docs/en/about-claude/pricing';
+const CLAUDE_PLUGIN_REPO_URL = PROVIDER_PLUGIN_CONFIG.claude!.repoUrl;
+const COPILOT_PLUGIN_REPO_URL = PROVIDER_PLUGIN_CONFIG.copilot!.repoUrl;
+
+// Anchor IDs stay identical across locales — they're URL fragments,
+// referenced by bookmarks and by `FaqAsterisk`.
+const tocGroups = [
+  {
+    label: 'General',
+    entries: [
+      { id: 'provider-coverage', nav: 'Provider coverage', q: 'Which providers are shown?' },
+      { id: 'total-tokens', nav: 'Total tokens', q: 'Why don’t total tokens count cache tokens?' },
+      { id: 'co2-calculation', nav: 'CO₂ calculation', q: 'How is the CO₂ value calculated?' },
+      { id: 'user-data', nav: 'User data', q: 'What user data is collected?' },
+      { id: 'docker-usage', nav: 'Docker usage', q: 'Is usage inside Docker also tracked?' },
+    ],
+  },
+  {
+    label: 'Claude',
+    entries: [
+      { id: 'cost-calculation', nav: 'Cost calculation', q: 'How is the cost calculated?' },
+      { id: 'plugin-installation', nav: 'Plugin installation', q: 'How do I install the plugin?' },
+    ],
+  },
+  {
+    label: 'Copilot',
+    entries: [
+      { id: 'cost-calculation-copilot', nav: 'Cost calculation', q: 'How is the cost for Copilot calculated?' },
+      { id: 'plugin-installation-copilot', nav: 'Plugin installation', q: 'How do I install the Copilot plugin?' },
+    ],
+  },
+];
+---
+
+<Layout title={t.faqPage.title(COMPANY_NAME)}>
+  <Header title={t.faqPage.headerTitle} lede={t.faqPage.headerLede} />
+
+  <div class="faq">
+    <aside class="faq__toc" aria-label={t.faqPage.tocAriaLabel}>
+      <nav>
+        {tocGroups.map((g) => (
+          <div class="faq__toc-group">
+            <p class="faq__toc-label">{g.label}</p>
+            <ul>
+              {g.entries.map((e) => (
+                <li><a href={`#${e.id}`}>{e.nav}</a></li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </nav>
+    </aside>
+
+    <div class="faq__content">
+      <h2 class="faq__group">General</h2>
+
+      <section id="provider-coverage" class="faq__entry">
+        <h2 class="ds-h3 faq__q">Which providers are shown?</h2>
+        <p>
+          This dashboard supports <strong>Claude</strong> (Anthropic),
+          <strong>GitHub Copilot</strong> and <strong>Open Code</strong>.
+          Which of them actually carry live data depends on usage across the
+          company.
+        </p>
+      </section>
+
+      <section id="total-tokens" class="faq__entry">
+        <h2 class="ds-h3 faq__q">Why don’t total tokens count cache tokens?</h2>
+        <p>
+          In the <strong>totals</strong> (company-wide as well as per provider),
+          only <strong>input</strong> and <strong>output tokens</strong>{' '}
+          count towards <strong>total tokens</strong> —{' '}
+          <strong>cache write</strong> and <strong>cache read</strong> are
+          excluded here.
+        </p>
+        <p>
+          Depending on usage, cache tokens can occur in very large numbers and
+          would push the sum into an <strong>extreme range</strong>. Actual
+          fluctuations in consumption would then barely be visible, and a
+          reliable sense of token usage would be lost. Excluding them keeps
+          total tokens comparable and meaningful.
+        </p>
+        <p class="faq__caveat">
+          Cache tokens aren't dropped — they still appear individually in the
+          breakdown by token type and in the model table.
+        </p>
+      </section>
+
+      <section id="co2-calculation" class="faq__entry">
+        <h2 class="ds-h3 faq__q">How is the CO₂ value calculated?</h2>
+        <p>
+          We calculate approximate CO₂ emissions based on the study{' '}
+          <a href={METHODOLOGY_URL} target="_blank" rel="noopener noreferrer">
+            How Hungry is AI? Benchmarking Energy, Water, and Carbon Footprint of LLM Inference
+          </a>{' '}
+          by Jegham et al. The study doesn't measure the power consumption of
+          commercial language models directly. Instead, it records response
+          times of various models on standardized requests and maps them to
+          an energy consumption per request using an infrastructure model.
+          That model combines measured response times with publicly available
+          information about data centers and assumptions about the hardware
+          used and system utilization.
+        </p>
+        <p>
+          For our internal order-of-magnitude estimate, we use a factor of{' '}
+          <strong>840 g CO₂e per million output-equivalent tokens</strong>.
+        </p>
+        <details class="faq__details">
+          <summary>How we derive the factor</summary>
+          <p>
+            The derivation is based on the long-context scenario for Claude
+            3.7 Sonnet from the study, with 10,000 input and 1,500 output
+            tokens. For this scenario, Jegham et al. estimate an energy
+            consumption of 5.671 Wh. With the emission factor used in the
+            study of 0.287 kg CO₂e/kWh, this results in roughly 1.628 g CO₂e
+            per request.
+          </p>
+          <p>
+            For our simplified token model, we weight one input token as one
+            twentieth of an output token. The reference scenario therefore
+            corresponds to 2,000 output-equivalent tokens, which works out to
+            roughly 814 g CO₂e per million output-equivalent tokens. Taking
+            into account the uncertainty in energy consumption reported by
+            Jegham et al., this gives a range of roughly 771 to 857 g CO₂e per
+            million output-equivalent tokens. For internal reporting, we use
+            the slightly conservatively rounded value of{' '}
+            <strong>840 g CO₂e per million output-equivalent tokens</strong>.
+          </p>
+          <p>
+            The study doesn't report or model prompt-caching activity
+            separately. For our agentic coding workloads, where large
+            repository contexts are frequently reused, we therefore also
+            factor in the cache-write and cache-read tokens reported by the
+            CLI tools. These are converted into output-equivalent tokens
+            using our own approximate weights: cache-write tokens at 1.25
+            times the input factor, cache-read tokens at 1&nbsp;% of the input
+            factor. This weighting is based on the price relations of the
+            Claude API and represents a pragmatic approximation.
+          </p>
+          <p>
+            For models other than Sonnet — such as Claude Opus, Claude Haiku,
+            and Claude Fable — we estimate the relative CO₂ factors from the
+            price ratios of the Claude API. We deliberately use a uniform,
+            price-based scaling instead of adopting the published estimates
+            for individual models directly.
+          </p>
+        </details>
+        <p class="faq__caveat">
+          These values are estimates. We don't have real measurements of the
+          energy consumption of individual requests — AI providers don't
+          publish this data. Actual emissions can vary significantly depending
+          on load, data center, and model optimizations. Applying this to
+          other models, as well as the weighting of cache tokens, are also our
+          own assumptions and not measured emission factors. This display is
+          meant for orientation and comparison, not exact accounting.
+        </p>
+      </section>
+
+      <section id="user-data" class="faq__entry">
+        <h2 class="ds-h3 faq__q">What user data is collected?</h2>
+        <p>
+          We collect <strong>no user-specific data</strong>. This applies
+          equally to <strong>all tracking plugins</strong>. On installation, a{' '}
+          <strong>randomly generated UUID</strong> is assigned; only this UUID
+          and the timestamp of <strong>first and last use</strong> are stored.
+        </p>
+        <p class="faq__caveat">
+          User behavior is not tracked, and no conclusions about individual
+          employees are possible.
+        </p>
+      </section>
+
+      <section id="docker-usage" class="faq__entry">
+        <h2 class="ds-h3 faq__q">Is usage inside Docker also tracked?</h2>
+        <p>
+          Claude Code as well as the Copilot CLI are sometimes deliberately
+          run inside a <strong>Docker container</strong> to isolate the host
+          machine. In this case, the{' '}
+          <strong>container configuration</strong> determines whether your
+          usage is tracked.
+        </p>
+        <p>
+          If the host directory <strong>~/.claude</strong> or{' '}
+          <strong>~/.copilot</strong> is mounted into the container, the
+          plugin installed there is also active inside the container, and
+          usage is tracked as usual. Otherwise, the respective plugin must be{' '}
+          <strong>additionally installed inside the container</strong> —
+          otherwise your usage won't be included in the analysis.
+        </p>
+      </section>
+
+      <h2 class="faq__group">Claude</h2>
+
+      <section id="cost-calculation" class="faq__entry">
+        <h2 class="ds-h3 faq__q">How is the cost calculated?</h2>
+        <p>
+          Costs are determined per model and token type from usage and shown
+          in <strong>US dollars</strong>. The calculation is based on the
+          official{' '}
+          <a href={PRICING_URL} target="_blank" rel="noopener noreferrer">
+            Claude pricing
+          </a>, which sets a separate price per million tokens for each token
+          type (input, output, cache write, cache read).
+        </p>
+        <p class="faq__caveat">
+          No conversion to euros takes place. The current prices from the
+          linked pricing page always apply.
+        </p>
+      </section>
+
+      <section id="plugin-installation" class="faq__entry">
+        <h2 class="ds-h3 faq__q">How do I install the plugin?</h2>
+        <p>
+          Usage is recorded via a{' '}
+          <a href={CLAUDE_PLUGIN_REPO_URL} target="_blank" rel="noopener noreferrer">
+            Claude plugin
+          </a>{' '}
+          that must be installed in Claude. Only users with the plugin
+          installed are included in the analysis — the reported user count
+          reflects active plugin installations for the selected period.
+        </p>
+        <p>
+          Install and uninstall:
+        </p>
+        <InstallCommand provider="claude" locale={locale} mode="install" client:load />
+        <InstallCommand provider="claude" locale={locale} mode="uninstall" client:load />
+        <p>
+          Details are in the{' '}
+          <a href={CLAUDE_PLUGIN_REPO_URL} target="_blank" rel="noopener noreferrer">
+            plugin repository's README
+          </a>.
+        </p>
+      </section>
+
+      <h2 class="faq__group">Copilot</h2>
+
+      <section id="cost-calculation-copilot" class="faq__entry">
+        <h2 class="ds-h3 faq__q">How is the cost for Copilot calculated?</h2>
+        <p>
+          Due to <strong>ambiguous communication from GitHub</strong>, costs
+          for <strong>GitHub Copilot</strong> are currently also only an{' '}
+          <strong>approximation</strong>. We assume{' '}
+          <strong>1 US cent per AI&nbsp;unit</strong>.
+        </p>
+        <p>
+          In practice, Copilot currently bills <strong>1 US cent per
+          AI&nbsp;credit</strong> (not per unit) — but only for the{' '}
+          <strong>credit-based billing plans</strong>, which are meanwhile{' '}
+          <strong>deprecated</strong>.
+        </p>
+        <p class="faq__caveat">
+          Detailed pricing information for usage-based billing isn't available
+          yet. Once it is, we'll adjust our calculation accordingly.
+        </p>
+      </section>
+
+      <section id="plugin-installation-copilot" class="faq__entry">
+        <h2 class="ds-h3 faq__q">How do I install the Copilot plugin?</h2>
+        <p>
+          Usage is recorded via a{' '}
+          <a href={COPILOT_PLUGIN_REPO_URL} target="_blank" rel="noopener noreferrer">
+            Copilot plugin
+          </a>{' '}
+          that must be installed in GitHub Copilot. Only users with the plugin
+          installed are included in the analysis — the reported user count
+          reflects active plugin installations for the selected period.
+        </p>
+        <p>
+          The plugin currently only works with the{' '}
+          <strong>Copilot CLI variant</strong> — even inside the IDE. Please
+          use this variant so your usage is tracked.
+        </p>
+        <p class="faq__caveat">
+          The <strong>native Copilot integrations of the IDEs</strong> send{' '}
+          <strong>no</strong> token information to the dashboard. They will
+          eventually be replaced by CLI-based variants inside the IDE anyway
+          — as is already the case for Claude.
+        </p>
+        <p>
+          Install and uninstall:
+        </p>
+        <InstallCommand provider="copilot" locale={locale} mode="install" client:load />
+        <InstallCommand provider="copilot" locale={locale} mode="uninstall" client:load />
+        <p>
+          Details are in the{' '}
+          <a href={COPILOT_PLUGIN_REPO_URL} target="_blank" rel="noopener noreferrer">
+            plugin repository's README
+          </a>.
+        </p>
+      </section>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .faq {
+    display: grid;
+    grid-template-columns: minmax(0, 200px) minmax(0, 1fr);
+    gap: var(--space-lg);
+    align-items: start;
+  }
+
+  .faq__toc {
+    position: sticky;
+    top: var(--space-sm);
+  }
+  .faq__toc-group + .faq__toc-group {
+    margin-top: var(--space-sm);
+  }
+  .faq__toc-label {
+    margin: 0 0 10px;
+    font-size: var(--t-micro);
+    font-weight: var(--fw-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--neuland-primary);
+  }
+  .faq__toc ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-left: 1px solid var(--bg-3);
+  }
+  .faq__toc a {
+    display: block;
+    padding: 2px 0 2px var(--space-sm);
+    margin-left: -1px;
+    border-left: 2px solid transparent;
+    font-size: var(--t-small);
+    color: var(--fg-2);
+    text-decoration: none;
+    transition: border-color var(--ease-fast), color var(--ease-fast);
+  }
+  .faq__toc a:hover {
+    opacity: 1;
+    color: var(--fg-1);
+    border-left-color: var(--neuland-primary-light);
+  }
+
+  .faq__content {
+    display: flex;
+    flex-direction: column;
+    max-width: 80ch;
+  }
+  .faq__entry {
+    padding: var(--space-md) 0;
+    border-top: 1px solid var(--bg-3);
+    scroll-margin-top: var(--space-sm);
+  }
+  .faq__entry:first-child {
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .faq__group {
+    margin: var(--space-md) 0 0;
+    font-size: var(--t-micro);
+    font-weight: var(--fw-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--neuland-primary);
+  }
+  .faq__group:first-child {
+    margin-top: 0;
+  }
+
+  .faq__group + .faq__entry {
+    border-top: none;
+  }
+  .faq__q {
+    margin: 0 0 12px;
+  }
+
+  .faq__entry:target .faq__q {
+    color: var(--neuland-primary);
+  }
+  .faq__entry p {
+    margin: 0 0 10px;
+    color: var(--fg-2);
+    line-height: var(--lh-text);
+  }
+  .faq__entry p:last-child { margin-bottom: 0; }
+  .faq__entry a { color: var(--neuland-link); }
+  .faq__entry strong { color: var(--fg-1); font-weight: var(--fw-semibold); }
+  .faq__list {
+    margin: 0 0 10px;
+    padding-left: 1.2em;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: var(--fg-2);
+    line-height: var(--lh-text);
+  }
+  .faq__caveat { color: var(--fg-3); font-style: italic; }
+  .faq__details {
+    margin: 0 0 10px;
+    padding: var(--space-sm);
+    border: 1px solid var(--bg-3);
+    border-radius: var(--radius-sm, 6px);
+  }
+  .faq__details summary {
+    cursor: pointer;
+    font-size: var(--t-small);
+    font-weight: var(--fw-semibold);
+    color: var(--fg-1);
+  }
+  .faq__details p {
+    margin-top: 10px;
+  }
+  .faq__details p:first-of-type {
+    margin-top: var(--space-sm);
+  }
+
+  @media (max-width: 768px) {
+    .faq {
+      grid-template-columns: 1fr;
+      gap: var(--space-sm);
+    }
+    .faq__toc {
+      position: static;
+    }
+    .faq__toc ul {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      border-left: none;
+    }
+    .faq__toc a {
+      padding: 0;
+      margin-left: 0;
+      border-left: none;
+      border-bottom: 2px solid transparent;
+    }
+    .faq__toc a:hover {
+      border-left: none;
+      border-bottom-color: var(--neuland-primary-light);
+    }
+  }
+</style>

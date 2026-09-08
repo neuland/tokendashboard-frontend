@@ -1,0 +1,66 @@
+---
+const stone = 'var(--neuland-light-grey)';
+const skyMint = 'var(--neuland-bright-green)';
+const sage = 'var(--neuland-green)';
+const lightRed = 'var(--neuland-primary-light)';
+
+const bars = [
+  { h: 34, c: lightRed, dur: 7.2, delay: 0.0 },
+  { h: 58, c: skyMint, dur: 8.4, delay: 1.1 },
+  { h: 22, c: stone, dur: 6.6, delay: 2.3 },
+  { h: 78, c: sage, dur: 9.1, delay: 0.6 },
+  { h: 44, c: skyMint, dur: 7.8, delay: 3.0 },
+  { h: 96, c: lightRed, dur: 8.9, delay: 1.7 },
+  { h: 64, c: sage, dur: 6.9, delay: 0.3 },
+  { h: 30, c: stone, dur: 7.5, delay: 2.6 },
+  { h: 84, c: skyMint, dur: 8.1, delay: 1.4 },
+  { h: 48, c: stone, dur: 6.3, delay: 3.4 },
+  { h: 70, c: lightRed, dur: 8.7, delay: 0.9 },
+  { h: 26, c: stone, dur: 7.0, delay: 2.0 },
+];
+
+const scale = 0.72;
+---
+
+<div class="deco-bars" aria-hidden="true">
+  {
+    bars.map((b) => (
+      <span
+        style={`height: ${Math.round(b.h * scale)}px; background: ${b.c}; animation-duration: ${b.dur}s; animation-delay: -${b.delay}s;`}
+      />
+    ))
+  }
+</div>
+
+<style>
+  .deco-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    max-width: 1200px;
+    margin: var(--space-xl) auto 0;
+    padding: 0 var(--space-sm);
+    pointer-events: none;
+  }
+  .deco-bars span {
+    flex: 1;
+    border-radius: 3px 3px 0 0;
+    transform-origin: bottom;
+    animation-name: deco-bar-breathe;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+  }
+  @keyframes deco-bar-breathe {
+    from { transform: scaleY(1); }
+    to { transform: scaleY(0.72); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .deco-bars span { animation: none; }
+  }
+  @media (max-width: 480px) {
+    .deco-bars { gap: 8px; }
+    /* Too cramped for twelve bars on a phone */
+    .deco-bars span:nth-child(even) { display: none; }
+  }
+</style>

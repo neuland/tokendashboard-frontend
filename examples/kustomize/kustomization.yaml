@@ -1,0 +1,7 @@
+---
+namespace: my-namespace
+
+resources:
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml

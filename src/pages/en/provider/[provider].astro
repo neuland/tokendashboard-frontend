@@ -1,0 +1,22 @@
+---
+import Layout from '~/layouts/Layout.astro';
+import Header from '~/components/Header.astro';
+import ProviderDetail from '~/components/ProviderDetail.tsx';
+import { PROVIDERS, PROVIDER_LABELS } from '~/lib/types';
+import type { Provider } from '~/lib/types';
+import { dict, DEFAULT_LOCALE, type Locale } from '~/i18n';
+import { COMPANY_NAME } from '~/lib/company';
+
+export function getStaticPaths(): { params: { provider: Provider }; props: { provider: Provider } }[] {
+  return PROVIDERS.map((provider) => ({ params: { provider }, props: { provider } }));
+}
+
+const { provider } = Astro.props as { provider: Provider };
+const locale = (Astro.currentLocale as Locale | undefined) ?? DEFAULT_LOCALE;
+const t = dict(locale);
+---
+
+<Layout title={t.providerPage.title(PROVIDER_LABELS[locale][provider], COMPANY_NAME)}>
+  <Header title={PROVIDER_LABELS[locale][provider]} lede={t.providerDetail.lede} />
+  <ProviderDetail client:only="react" provider={provider} locale={locale} />
+</Layout>

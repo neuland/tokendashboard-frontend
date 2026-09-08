@@ -1,0 +1,14 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "include": [".astro/types.d.ts", "**/*"],
+  "exclude": ["dist"],
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    // `~/…` maps to `src/…`. Astro reads these paths and hands them to Vite, so the
+    // same alias works in `astro dev`, `astro build`, `astro check` and vitest.
+    "paths": {
+      "~/*": ["src/*"]
+    }
+  }
+}
