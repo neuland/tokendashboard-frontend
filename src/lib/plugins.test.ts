@@ -20,7 +20,7 @@ describe('buildPluginInstallCommand', () => {
 
     // then
     expect(command).toBe(
-      'npx git+https://github.com/neuland/tokendashboard-plugin-copilot.git install ' +
+      'npx --allow-git=all git+https://github.com/neuland/tokendashboard-plugin-copilot.git install ' +
         '--api-base-url https://tokendashboard.example.com/api/ingest/copilot ' +
         '--repo-raw-base-url https://raw.githubusercontent.com/neuland/tokendashboard-plugin-copilot/main',
     );
@@ -31,7 +31,7 @@ describe('buildPluginUninstallCommand', () => {
   it('builds the npx uninstall command without flags', () => {
     // given / when / then
     expect(buildPluginUninstallCommand('claude')).toBe(
-      'npx git+https://github.com/neuland/tokendashboard-plugin-claude.git uninstall',
+      'npx --allow-git=all git+https://github.com/neuland/tokendashboard-plugin-claude.git uninstall',
     );
   });
 });
