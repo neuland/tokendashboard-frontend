@@ -89,7 +89,7 @@ export function buildPluginInstallCommand(provider: Provider, apiBaseUrl: string
   if (!config) {
     return undefined;
   }
-  return `npx git+${config.installGitUrl} install --api-base-url ${apiBaseUrl} --repo-raw-base-url ${config.rawBaseUrl}`;
+  return `npx --allow-git=all git+${config.installGitUrl} install --api-base-url ${apiBaseUrl} --repo-raw-base-url ${config.rawBaseUrl}`;
 }
 
 export function buildPluginUninstallCommand(provider: Provider): string | undefined {
@@ -97,7 +97,7 @@ export function buildPluginUninstallCommand(provider: Provider): string | undefi
   if (!config) {
     return undefined;
   }
-  return `npx git+${config.installGitUrl} uninstall`;
+  return `npx --allow-git=all git+${config.installGitUrl} uninstall`;
 }
 
 /** This dashboard's base url; absolute, since the plugin runs on the user's machine. */
