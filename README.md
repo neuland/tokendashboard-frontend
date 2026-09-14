@@ -1,8 +1,14 @@
 # neuland Token & CO₂ Dashboard – Frontend
 
-Company-wide dashboard visualizing token consumption, estimated cost and estimated
-CO₂ emissions across AI providers (Claude, Copilot, OpenCode, local open-weight
-models).
+Part of a system that measures companies’ token usage.
+It requires the backend, the frontend and at least one plugin that sends the data.
+This is the frontend repository.   
+The backend can be found here:  
+https://github.com/neuland/tokendashboard-backend  
+and the plugins here:   
+Claude: https://github.com/neuland/tokendashboard-plugin-claude  
+Copilot: https://github.com/neuland/tokendashboard-plugin-copilot  
+OpenCode: https://github.com/neuland/tokendashboard-plugin-opencode
 
 ## Overview
 
