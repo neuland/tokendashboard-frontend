@@ -136,9 +136,10 @@ const tocGroups = [
             Output-Äquivalent-Tokens. Berücksichtigt man die von Jegham et
             al. angegebene Unsicherheit des Energieverbrauchs, ergibt sich
             ein Bereich von etwa 771 bis 857 g CO₂e pro Million
-            Output-Äquivalent-Tokens. Für interne Darstellungen verwenden
-            wir den leicht konservativ gerundeten Wert von{' '}
-            <strong>840 g CO₂e pro Million Output-Äquivalent-Tokens</strong>.
+            Output-Äquivalent-Tokens. Für interne Darstellungen runden wir
+            auf{' '}
+            <strong>840 g CO₂e pro Million Output-Äquivalent-Tokens</strong>{' '}
+            — im oberen Bereich dieser Schwankungsbreite.
           </p>
           <p>
             Die Studie weist Prompt-Caching-Aktivitäten nicht separat aus
@@ -146,12 +147,26 @@ const tocGroups = [
             Agentic-Coding-Workloads, bei denen große Repository-Kontexte
             häufig wiederverwendet werden, berücksichtigen wir deshalb
             zusätzlich die von den CLI-Werkzeugen ausgewiesenen
-            Cache-Write- und Cache-Read-Tokens. Diese werden mit eigenen
-            Näherungsgewichten in Output-Äquivalent-Tokens umgerechnet:
-            Cache-Write-Tokens mit dem 1,25-fachen des Input-Faktors,
-            Cache-Read-Tokens mit 1&nbsp;% des Input-Faktors. Diese
-            Gewichtung orientiert sich an den Preisrelationen der
-            Claude-API und stellt eine pragmatische Näherung dar.
+            Cache-Write- und Cache-Read-Tokens. Diese Token-Kategorien
+            werden mit eigenen Näherungsfaktoren in
+            Output-Äquivalent-Tokens umgerechnet.
+          </p>
+          <p>
+            Cache-Write-Tokens orientieren sich am Preisverhältnis und
+            werden mit dem 1,25-fachen des Input-Faktors gewichtet —
+            passend zur Preisgestaltung der API. Für Cache-Read-Tokens
+            setzen wir dagegen einen deutlich geringeren Faktor an, als es
+            das Preisverhältnis der API nahelegen würde: Die API berechnet
+            Cache-Reads mit 10&nbsp;% des Input-Preises, wir rechnen mit
+            1&nbsp;% des Input-Faktors. Diese Abweichung ist eine bewusste
+            Setzung, keine Messung: Ein Cache-Read ist rechnerisch näher an
+            einem Speicherzugriff als an einem vollständigen Forward-Pass,
+            und Preise spiegeln primär die Kostenstruktur des Anbieters
+            wider, nicht direkt den Energieverbrauch. Wie groß der
+            tatsächliche Unterschied ist, wissen wir nicht — 1&nbsp;% ist
+            eine grobe Näherung, keine belastbare Ableitung. Der Wert
+            könnte ebenso gut bei 3&nbsp;%, 5&nbsp;% oder 10&nbsp;% liegen;
+            uns fehlt die Grundlage, das einzugrenzen.
           </p>
           <p>
             Für andere Modelle als Sonnet — etwa Claude Opus, Claude Haiku
@@ -163,14 +178,19 @@ const tocGroups = [
           </p>
         </details>
         <p class="faq__caveat">
-          Diese Werte sind Schätzungen. Reale Messungen des Energieverbrauchs
-          einzelner Anfragen liegen uns nicht vor, KI-Anbieter veröffentlichen
-          diese Daten nicht. Die tatsächlichen Emissionen können je nach
-          Auslastung, Rechenzentrum und Modelloptimierungen deutlich abweichen.
-          Auch die Übertragung auf andere Modelle sowie die Gewichtung von
-          Cache-Tokens sind eigene Annahmen und keine gemessenen
-          Emissionsfaktoren. Die Darstellung dient der Orientierung und dem
-          Vergleich, nicht der exakten Bilanzierung.
+          Diese Werte sind Näherungen, keine Messungen. Uns liegen keine
+          eigenen Messdaten zum Energieverbrauch einzelner Anfragen vor —
+          Anbieter veröffentlichen das nicht —, und auch die zugrundeliegende
+          Studie schätzt nur, mit entsprechender Schwankungsbreite je nach
+          Auslastung, Rechenzentrum und Modelloptimierungen. Mehrere
+          Annahmen in unserer Herleitung sind zusätzlich eigene Setzungen:
+          die Gewichtung von Input- gegenüber Output-Tokens, die Übertragung
+          auf andere Modelle über Preisverhältnisse, und insbesondere die
+          Gewichtung von Cache-Read-Tokens. Für keine dieser Annahmen können
+          wir sagen, ob sie den tatsächlichen Verbrauch eher über- oder
+          unterschätzt — geschweige denn um wie viel. Die ausgewiesenen
+          Werte dienen der groben Einordnung und dem Vergleich zwischen
+          Modellen und Nutzung, nicht einer belastbaren CO₂-Bilanz.
         </p>
       </section>
 

@@ -134,20 +134,33 @@ const tocGroups = [
             roughly 814 g CO₂e per million output-equivalent tokens. Taking
             into account the uncertainty in energy consumption reported by
             Jegham et al., this gives a range of roughly 771 to 857 g CO₂e per
-            million output-equivalent tokens. For internal reporting, we use
-            the slightly conservatively rounded value of{' '}
-            <strong>840 g CO₂e per million output-equivalent tokens</strong>.
+            million output-equivalent tokens. For internal reporting, we
+            round up to{' '}
+            <strong>840 g CO₂e per million output-equivalent tokens</strong>{' '}
+            — toward the upper end of that range.
           </p>
           <p>
             The study doesn't report or model prompt-caching activity
             separately. For our agentic coding workloads, where large
             repository contexts are frequently reused, we therefore also
             factor in the cache-write and cache-read tokens reported by the
-            CLI tools. These are converted into output-equivalent tokens
-            using our own approximate weights: cache-write tokens at 1.25
-            times the input factor, cache-read tokens at 1&nbsp;% of the input
-            factor. This weighting is based on the price relations of the
-            Claude API and represents a pragmatic approximation.
+            CLI tools. These token categories are converted into
+            output-equivalent tokens using our own approximation factors.
+          </p>
+          <p>
+            Cache-write tokens start from the pricing ratio and are weighted
+            at 1.25 times the input factor, matching the API's pricing. For
+            cache-read tokens we use a much lower factor than the API's
+            pricing ratio would suggest: the API prices cache reads at
+            10&nbsp;% of the input-token cost, we use 1&nbsp;% of the input
+            factor instead. This deviation is a deliberate choice, not a
+            measurement: a cache read is computationally closer to a memory
+            lookup than to a full forward pass, and prices primarily reflect
+            the provider's cost structure, not directly the energy consumed.
+            We don't know how large the actual difference is — 1&nbsp;% is a
+            rough approximation, not a solid derivation. The real value
+            could just as well be 3&nbsp;%, 5&nbsp;%, or 10&nbsp;%; we have
+            no basis for narrowing it down.
           </p>
           <p>
             For models other than Sonnet — such as Claude Opus, Claude Haiku,
@@ -158,13 +171,18 @@ const tocGroups = [
           </p>
         </details>
         <p class="faq__caveat">
-          These values are estimates. We don't have real measurements of the
-          energy consumption of individual requests — AI providers don't
-          publish this data. Actual emissions can vary significantly depending
-          on load, data center, and model optimizations. Applying this to
-          other models, as well as the weighting of cache tokens, are also our
-          own assumptions and not measured emission factors. This display is
-          meant for orientation and comparison, not exact accounting.
+          These values are approximations, not measurements. We have no
+          measurement data of our own on the energy consumption of individual
+          requests — providers don't publish that — and the underlying study
+          itself only estimates, with its own uncertainty depending on load,
+          data center, and model optimizations. Several assumptions in our
+          derivation are choices we made ourselves on top of that: the
+          weighting of input against output tokens, the transfer to other
+          models via pricing ratios, and in particular the weighting of
+          cache-read tokens. For none of these assumptions can we say
+          whether it over- or underestimates actual consumption — let alone
+          by how much. The values shown are meant for rough orientation and
+          for comparing models and usage, not for exact accounting.
         </p>
       </section>
 
