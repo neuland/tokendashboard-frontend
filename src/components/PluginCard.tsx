@@ -3,8 +3,8 @@ import type { Provider } from '~/lib/types';
 import { providerPlugin } from '~/lib/plugins';
 import { formatNumber } from '~/lib/format';
 import { dict, type Locale } from '~/i18n';
-import { FaqAsterisk } from '~/components/FaqAsterisk';
-import InstallCommand from '~/components/InstallCommand';
+import { FaqAsterisk } from './FaqAsterisk';
+import InstallCommand from './InstallCommand';
 import SectionCard from './SectionCard';
 
 interface Props {
@@ -22,12 +22,12 @@ export default function PluginCard({ activeUsers, provider, locale }: Props): JS
   const plugin = providerPlugin(provider, locale);
   const [showInstall, setShowInstall] = useState(false);
   return (
-    <SectionCard title={t.next.pluginTracking} aside={t.next.pluginWindow} soft headingId="nx-plugin">
-      <div className="nx-stack">
+    <SectionCard title={t.dashboard.pluginTracking} aside={t.dashboard.pluginWindow} soft headingId="app-plugin">
+      <div className="app-stack">
         <div>
-          <span className="nx-big">{formatNumber(activeUsers, locale)}</span>
+          <span className="app-big">{formatNumber(activeUsers, locale)}</span>
           <span>
-            {t.next.activeInstallations}
+            {t.dashboard.activeInstallations}
             <FaqAsterisk kind="privacy" locale={locale} />
           </span>
         </div>
@@ -43,8 +43,8 @@ export default function PluginCard({ activeUsers, provider, locale }: Props): JS
           {t.pluginPanel.descriptionSuffix}
         </p>
         {plugin && (
-          <button type="button" className="nx-button nx-button--quiet" aria-expanded={showInstall} onClick={() => setShowInstall((v) => !v)}>
-            {t.next.installButton}
+          <button type="button" className="app-button app-button--quiet" aria-expanded={showInstall} onClick={() => setShowInstall((v) => !v)}>
+            {t.dashboard.installButton}
           </button>
         )}
         {plugin && showInstall && <InstallCommand provider={provider} locale={locale} mode="install" />}

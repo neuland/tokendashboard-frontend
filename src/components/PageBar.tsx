@@ -21,10 +21,10 @@ interface Props {
 /** Page head: title and lede on the left, the page's controls on the right. */
 export default function PageBar({ title, lede, crumbs, marker, afterTitle, children }: Props): JSX.Element {
   return (
-    <div className="nx-pagebar">
+    <div className="app-pagebar">
       <div>
         {crumbs && crumbs.length > 0 && (
-          <div className="nx-pagebar__crumbs">
+          <div className="app-pagebar__crumbs">
             {crumbs.map((c) => (
               <span key={c.href} style={{ margin: 0 }}>
                 <a href={c.href}>{c.label}</a>
@@ -33,16 +33,16 @@ export default function PageBar({ title, lede, crumbs, marker, afterTitle, child
             ))}
           </div>
         )}
-        <div className="nx-pagebar__titlerow">
-          <h1 className="nx-pagebar__title">
+        <div className="app-pagebar__titlerow">
+          <h1 className="app-pagebar__title">
             {marker}
             {title}
           </h1>
           {afterTitle}
         </div>
-        {lede && <p className="nx-pagebar__lede">{lede}</p>}
+        {lede && <p className="app-pagebar__lede">{lede}</p>}
       </div>
-      {children && <div className="nx-pagebar__tools">{children}</div>}
+      {children && <div className="app-pagebar__tools">{children}</div>}
     </div>
   );
 }

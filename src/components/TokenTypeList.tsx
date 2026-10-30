@@ -33,21 +33,21 @@ export default function TokenTypeList({ tokens, total, locale }: Props): JSX.Ele
     return `${f.value} ${f.unit || t.common.tokensLabel}`;
   };
   return (
-    <SectionCard title={t.next.tokenTypes} aside={<><span className="nx-num" title={formatNumber(total, locale)}>{amount(total)}</span><CacheBadge locale={locale} /></>} headingId="nx-token-types">
+    <SectionCard title={t.dashboard.tokenTypes} aside={<><span className="app-num" title={formatNumber(total, locale)}>{amount(total)}</span><CacheBadge locale={locale} /></>} headingId="app-token-types">
       {GROUPS.map((group) => {
         const sum = group.types.reduce((acc, tt) => acc + tokens[tt], 0);
         return (
-          <div className="nx-tgroup" key={group.key}>
-            <div className="nx-tgroup__head">
-              <span>{t.next.tokenGroups[group.key]}</span>
-              <span className="nx-num" title={formatNumber(sum, locale)}>{amount(sum)}</span>
+          <div className="app-tgroup" key={group.key}>
+            <div className="app-tgroup__head">
+              <span>{t.dashboard.tokenGroups[group.key]}</span>
+              <span className="app-num" title={formatNumber(sum, locale)}>{amount(sum)}</span>
             </div>
-            <div className="nx-tgroup__rows">
+            <div className="app-tgroup__rows">
               {group.types.map((tt) => (
-                <div className="nx-trow" key={tt}>
-                  <div className="nx-trow__line">
+                <div className="app-trow" key={tt}>
+                  <div className="app-trow__line">
                     <span>{TOKEN_TYPE_LABELS[locale][tt]}</span>
-                    <span className="nx-num" title={formatNumber(tokens[tt], locale)}>{amount(tokens[tt])}</span>
+                    <span className="app-num" title={formatNumber(tokens[tt], locale)}>{amount(tokens[tt])}</span>
                   </div>
                   <ShareBar fraction={sum > 0 ? tokens[tt] / sum : 0} color={TOKEN_TYPE_COLORS[tt]} thin />
                 </div>

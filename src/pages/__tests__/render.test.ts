@@ -61,7 +61,7 @@ function islandUrl(html: string): string | undefined {
 }
 
 function activeNav(html: string): string[] {
-  return [...html.matchAll(/<a href="([^"]+)" class="nx-nav__link" aria-current="page"/g)].map((m) => m[1]);
+  return [...html.matchAll(/<a href="([^"]+)" class="app-nav__link" aria-current="page"/g)].map((m) => m[1]);
 }
 
 describe('index page', () => {
@@ -78,7 +78,7 @@ describe('index page', () => {
       title: t.header.defaultTitle,
       lede: t.header.defaultLede(COMPANY_NAME),
     });
-    expect(islandUrl(html)).toContain('DashboardNext');
+    expect(islandUrl(html)).toContain('Dashboard');
   });
 
   it('marks the company-wide item active in the sidebar, and only that one', async () => {
@@ -151,7 +151,7 @@ describe('provider page', () => {
       title: PROVIDER_LABELS[DEFAULT_LOCALE].copilot,
       lede: t.providerDetail.lede,
     });
-    expect(islandUrl(html)).toContain('ProviderDetailNext');
+    expect(islandUrl(html)).toContain('ProviderDetail');
   });
 
   it('marks the visited provider active in the sidebar', async () => {
@@ -196,9 +196,9 @@ describe('sidebar', () => {
     // then
     expect(html).not.toContain('href="/projects/"');
     expect(html).not.toContain('href="/local/"');
-    expect(html).not.toContain('nx-nav__link--soon');
-    expect(html).not.toContain('nx-soon--beta');
-    expect(html).not.toContain('data-nx-favorites');
+    expect(html).not.toContain('app-nav__link--soon');
+    expect(html).not.toContain('app-soon--beta');
+    expect(html).not.toContain('data-app-favorites');
   });
 
   it('offers the collapse button, remembered under the nav storage key', async () => {
@@ -209,7 +209,7 @@ describe('sidebar', () => {
     const html = await c.renderToString(DeIndex, { request: new Request('http://localhost/') });
 
     // then
-    expect(html).toContain('data-nx-collapse');
+    expect(html).toContain('data-app-collapse');
     expect(html).toContain('tokendashboard.nav');
   });
 });
@@ -224,7 +224,7 @@ describe('FAQ page', () => {
 
     // then
     expect(html).toContain(`id="${t.faqAsterisk.co2.id}"`);
-    expect(html).toContain('class="nx-faq"');
+    expect(html).toContain('class="app-faq"');
   });
 
   it('answers "Plugins installieren" from the sidebar with every provider, not Claude alone', async () => {
@@ -235,7 +235,7 @@ describe('FAQ page', () => {
     const html = await c.renderToString(DeFaq, { request: new Request('http://localhost/faq/') });
 
     // then
-    expect(html).toMatch(new RegExp(`<a href="/faq/#plugins" class="nx-nav__link"[^>]*title="${t.nav.installPlugins}"`));
+    expect(html).toMatch(new RegExp(`<a href="/faq/#plugins" class="app-nav__link"[^>]*title="${t.nav.installPlugins}"`));
     const entry = html.slice(html.indexOf('<section id="plugins"'), html.indexOf('</section>', html.indexOf('<section id="plugins"')));
     expect(entry).toContain('href="#plugin-installation"');
     expect(entry).toContain('href="#plugin-installation-copilot"');

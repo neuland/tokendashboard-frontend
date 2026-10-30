@@ -8,7 +8,7 @@ import { dict, type Locale } from '~/i18n';
  */
 export default function CacheBadge({ locale }: { locale: Locale }): JSX.Element {
   return (
-    <span className="nx-pill nx-pill--cache">
+    <span className="app-pill app-pill--cache">
       <Database size={12} strokeWidth={2.25} aria-hidden="true" />
       {dict(locale).common.inclCache}
     </span>

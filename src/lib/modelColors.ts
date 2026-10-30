@@ -2,7 +2,7 @@ import type { ModelFamilyUsage } from './types';
 
 /**
  * Colours for model families, cycled by rank, since how many families the backend
- * reports is not known up front. Shared by the "Modell-Auswertung" chart and the model
+ * reports is not known up front. Shared by the history chart's `model` view and the model
  * table, so a family has the same colour in both.
  */
 export const MODEL_COLORS = [

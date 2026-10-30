@@ -29,7 +29,7 @@ export const en: typeof de = {
     autoHint: 'Weeks are picked automatically beyond 2 months',
     barsPer: 'Bars per',
   },
-  next: {
+  dashboard: {
     kpis: 'Key figures',
     kpisScopeProviders: 'All providers',
     kpisScopeModels: 'All models',

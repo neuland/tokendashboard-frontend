@@ -5,12 +5,12 @@ import type { View } from '~/lib/seriesChartData';
 import { buildProviderChartData, sortedModelFamilies } from '~/lib/seriesChartData';
 import type { useUsageSeries } from '~/lib/useUsageSeries';
 import { dict, type Locale } from '~/i18n';
-import ViewToggle from '~/components/ViewToggle';
-import ChartStatus from '~/components/ChartStatus';
-import EmptyRangeNotice from '~/components/EmptyRangeNotice';
-import { FaqAsterisk, type FaqAsteriskKind } from '~/components/FaqAsterisk';
-import SeriesBarChart from '~/components/SeriesBarChart';
-import { renderProviderUsageBars } from '~/components/ProviderUsageBars';
+import ViewToggle from './ViewToggle';
+import ChartStatus from './ChartStatus';
+import EmptyRangeNotice from './EmptyRangeNotice';
+import { FaqAsterisk, type FaqAsteriskKind } from './FaqAsterisk';
+import SeriesBarChart from './SeriesBarChart';
+import { renderProviderUsageBars } from './ProviderUsageBars';
 import ResolutionToggle, { canSwitchResolution } from './ResolutionToggle';
 import SectionCard from './SectionCard';
 import CacheBadge from './CacheBadge';
@@ -60,7 +60,7 @@ export default function ProviderHistoryCard({ series, range, view, onViewChange,
 
   return (
     <SectionCard
-      title={faqMark ? <span>{t.next.history}<FaqAsterisk kind={faqMark} locale={locale} /></span> : t.next.history}
+      title={faqMark ? <span>{t.dashboard.history}<FaqAsterisk kind={faqMark} locale={locale} /></span> : t.dashboard.history}
       aside={
         canSwitchResolution(rangeDays(range)) && (
           <>
@@ -69,11 +69,11 @@ export default function ProviderHistoryCard({ series, range, view, onViewChange,
           </>
         )
       }
-      headingId="nx-history"
+      headingId="app-history"
     >
-      <div className="nx-filter-row">
+      <div className="app-filter-row">
         <ViewToggle views={views} active={view} onChange={onViewChange} locale={locale} />
-        {view === 'tokenTypeAll' && <span className="nx-filter-row__end"><CacheBadge locale={locale} /></span>}
+        {view === 'tokenTypeAll' && <span className="app-filter-row__end"><CacheBadge locale={locale} /></span>}
       </div>
       {history}
     </SectionCard>

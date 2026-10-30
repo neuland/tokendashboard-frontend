@@ -26,7 +26,7 @@ describe('CommandBox', () => {
     const { container, getByRole } = render(<CommandBox command={command} locale="de" />);
 
     // then
-    expect(container.querySelector('.nx-cmd code')?.textContent).toBe(command);
+    expect(container.querySelector('.app-cmd code')?.textContent).toBe(command);
     expect(getByRole('button', { name: t.copy })).not.toBeNull();
   });
 

@@ -15,13 +15,13 @@ interface Props {
 /** A titled card; every section of a page is one of these. */
 export default function SectionCard({ title, aside, flush = false, soft = false, foot, children, headingId }: Props): JSX.Element {
   return (
-    <section className={`nx-card${soft ? ' nx-card--soft' : ''}`} aria-labelledby={headingId}>
-      <div className="nx-card__head">
-        <h2 className="nx-card__title" id={headingId}>{title}</h2>
-        {aside && <div className="nx-card__aside">{aside}</div>}
+    <section className={`app-card${soft ? ' app-card--soft' : ''}`} aria-labelledby={headingId}>
+      <div className="app-card__head">
+        <h2 className="app-card__title" id={headingId}>{title}</h2>
+        {aside && <div className="app-card__aside">{aside}</div>}
       </div>
-      <div className={`nx-card__body${flush ? ' nx-card__body--flush' : ''}`}>{children}</div>
-      {foot && <div className="nx-card__foot">{foot}</div>}
+      <div className={`app-card__body${flush ? ' app-card__body--flush' : ''}`}>{children}</div>
+      {foot && <div className="app-card__foot">{foot}</div>}
     </section>
   );
 }

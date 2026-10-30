@@ -1,6 +1,6 @@
 ---
-import LayoutNext from '~/layouts/LayoutNext.astro';
-import PageIntroNext from '~/components/next/PageIntroNext.astro';
+import Layout from '~/layouts/Layout.astro';
+import PageIntro from '~/components/PageIntro.astro';
 import FaqDe from '~/components/faq/FaqDe.astro';
 import { dict, DEFAULT_LOCALE, type Locale } from '~/i18n';
 import { COMPANY_NAME } from '~/lib/company';
@@ -9,7 +9,7 @@ const locale = (Astro.currentLocale as Locale | undefined) ?? DEFAULT_LOCALE;
 const t = dict(locale);
 ---
 
-<LayoutNext title={t.faqPage.title(COMPANY_NAME)}>
-  <PageIntroNext title={t.faqPage.headerTitle} lede={t.faqPage.headerLede} />
-  <div class="nx-faq"><FaqDe /></div>
-</LayoutNext>
+<Layout title={t.faqPage.title(COMPANY_NAME)}>
+  <PageIntro title={t.faqPage.headerTitle} lede={t.faqPage.headerLede} />
+  <div class="app-faq"><FaqDe /></div>
+</Layout>

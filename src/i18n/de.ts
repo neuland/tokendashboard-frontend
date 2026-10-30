@@ -30,7 +30,7 @@ export const de = {
     autoHint: 'Ab 2 Monaten Zeitraum automatisch Woche',
     barsPer: 'Balken je',
   },
-  next: {
+  dashboard: {
     kpis: 'Kennzahlen',
     kpisScopeProviders: 'Alle Provider',
     kpisScopeModels: 'Alle Modelle',

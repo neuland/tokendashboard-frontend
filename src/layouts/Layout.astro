@@ -3,7 +3,7 @@
 // while the page scrolls and collapses to an icon rail; below 900px it becomes a
 // drawer behind a menu button in a top bar.
 import '~/styles/global.css';
-import '~/styles/next.css';
+import '~/styles/app.css';
 import { getRelativeLocaleUrl } from 'astro:i18n';
 import { PROVIDERS, PROVIDER_SHORT_LABELS, PROVIDER_COLORS } from '~/lib/types';
 import { PROVIDER_ICON_PATHS } from '~/lib/providerIcons';
@@ -99,7 +99,7 @@ const brandMark =
       // Collapsed sidebar: applied before paint so the rail never jumps on load.
       try {
         if (window.localStorage.getItem(navKey) === 'collapsed') {
-          document.documentElement.classList.add('nx-collapsed');
+          document.documentElement.classList.add('app-collapsed');
         }
       } catch (_e) {
         // Storage unavailable: start expanded.
@@ -118,43 +118,43 @@ const brandMark =
     <meta name="twitter:description" content={description} />
     <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
   </head>
-  <body class="nx">
-    <div class="nx-shell">
-      <header class="nx-topbar">
-        <a href={pageUrl()} class="nx-brand" aria-label={t.layout.homeAriaLabel}>
-          <svg class="nx-brand__mark" viewBox="0 0 86 76" aria-hidden="true"><path fill="currentColor" d={brandMark}></path></svg>
-          <span class="nx-brand__text">{COMPANY_NAME || 'neuland'}<span class="nx-brand__sub">{t.layout.brandSub}</span></span>
+  <body class="app">
+    <div class="app-shell">
+      <header class="app-topbar">
+        <a href={pageUrl()} class="app-brand" aria-label={t.layout.homeAriaLabel}>
+          <svg class="app-brand__mark" viewBox="0 0 86 76" aria-hidden="true"><path fill="currentColor" d={brandMark}></path></svg>
+          <span class="app-brand__text">{COMPANY_NAME || 'neuland'}<span class="app-brand__sub">{t.layout.brandSub}</span></span>
         </a>
-        <button type="button" class="nx-menu-btn" aria-label={t.nav.menuOpen} aria-controls="nx-sidebar" aria-expanded="false" data-nx-menu>
+        <button type="button" class="app-menu-btn" aria-label={t.nav.menuOpen} aria-controls="app-sidebar" aria-expanded="false" data-app-menu>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
         </button>
       </header>
 
-      <aside class="nx-sidebar" id="nx-sidebar">
-        <div class="nx-sidebar__close">
-          <span class="nx-eyebrow">{t.layout.navAriaLabel}</span>
-          <button type="button" class="nx-menu-btn" aria-label={t.nav.menuClose} data-nx-close>
+      <aside class="app-sidebar" id="app-sidebar">
+        <div class="app-sidebar__close">
+          <span class="app-eyebrow">{t.layout.navAriaLabel}</span>
+          <button type="button" class="app-menu-btn" aria-label={t.nav.menuClose} data-app-close>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
           </button>
         </div>
-        <a href={pageUrl()} class="nx-brand" aria-label={t.layout.homeAriaLabel}>
-          <svg class="nx-brand__mark" viewBox="0 0 86 76" aria-hidden="true"><path fill="currentColor" d={brandMark}></path></svg>
-          <span class="nx-brand__text nx-fade">{COMPANY_NAME || 'neuland'}<span class="nx-brand__sub">{t.layout.brandSub}</span></span>
+        <a href={pageUrl()} class="app-brand" aria-label={t.layout.homeAriaLabel}>
+          <svg class="app-brand__mark" viewBox="0 0 86 76" aria-hidden="true"><path fill="currentColor" d={brandMark}></path></svg>
+          <span class="app-brand__text app-fade">{COMPANY_NAME || 'neuland'}<span class="app-brand__sub">{t.layout.brandSub}</span></span>
         </a>
-        <div class="nx-sidebar__toggle">
-          <button type="button" class="nx-collapse-btn" aria-label={t.nav.collapse} title={t.nav.collapse} data-expand-label={t.nav.expand} aria-expanded="true" aria-controls="nx-sidebar" data-nx-collapse>
+        <div class="app-sidebar__toggle">
+          <button type="button" class="app-collapse-btn" aria-label={t.nav.collapse} title={t.nav.collapse} data-expand-label={t.nav.expand} aria-expanded="true" aria-controls="app-sidebar" data-app-collapse>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
           </button>
         </div>
-        <nav class="nx-nav" aria-label={t.layout.navAriaLabel}>
+        <nav class="app-nav" aria-label={t.layout.navAriaLabel}>
           {groups.map((g) => (
-            <div class="nx-nav__group">
-              {g.items.length > 1 && <span class="nx-eyebrow nx-nav__label nx-fade">{g.label}</span>}
+            <div class="app-nav__group">
+              {g.items.length > 1 && <span class="app-eyebrow app-nav__label app-fade">{g.label}</span>}
               {g.items.map((item) => {
                 const inner = (
                   <>
                     {item.glyph && (
-                      <svg class="nx-glyph" width="16" height="16" viewBox="0 0 24 24" fill={item.color} aria-hidden="true"><path d={item.glyph}></path></svg>
+                      <svg class="app-glyph" width="16" height="16" viewBox="0 0 24 24" fill={item.color} aria-hidden="true"><path d={item.glyph}></path></svg>
                     )}
                     {item.icon === 'grid' && (
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
@@ -168,17 +168,17 @@ const brandMark =
                     {item.icon === 'plug' && (
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22v-5M9 8V2M15 8V2M18 8v5a6 6 0 0 1-12 0V8Z"></path></svg>
                     )}
-                    <span class="nx-fade">{item.label}</span>
-                    {item.soon && <span class="nx-soon nx-fade">{t.nav.soon}</span>}
-                    {item.beta && <span class="nx-soon nx-soon--beta nx-fade" title={t.nav.betaTitle}>{t.nav.beta}</span>}
+                    <span class="app-fade">{item.label}</span>
+                    {item.soon && <span class="app-soon app-fade">{t.nav.soon}</span>}
+                    {item.beta && <span class="app-soon app-soon--beta app-fade" title={t.nav.betaTitle}>{t.nav.beta}</span>}
                   </>
                 );
                 return item.soon ? (
-                  <span class="nx-nav__link nx-nav__link--soon" aria-disabled="true" title={`${item.label} · ${t.nav.soonTitle}`}>
+                  <span class="app-nav__link app-nav__link--soon" aria-disabled="true" title={`${item.label} · ${t.nav.soonTitle}`}>
                     {inner}
                   </span>
                 ) : (
-                  <a href={item.href} class="nx-nav__link" aria-current={item.active ? 'page' : undefined} title={item.label}>
+                  <a href={item.href} class="app-nav__link" aria-current={item.active ? 'page' : undefined} title={item.label}>
                     {inner}
                   </a>
                 );
@@ -186,8 +186,8 @@ const brandMark =
             </div>
           ))}
         </nav>
-        <div class="nx-sidebar__foot">
-          <span class="nx-locale">
+        <div class="app-sidebar__foot">
+          <span class="app-locale">
             {LOCALES.map((l, i) => (
               <>
                 {i > 0 && <span aria-hidden="true"> / </span>}
@@ -196,12 +196,12 @@ const brandMark =
             ))}
           </span>
           <span>{t.nav.build(buildDate)}</span>
-          <span>{t.layout.footerCredit} <a class="nx-credit-link" href="https://neuland-bfi.de" target="_blank" rel="noopener noreferrer">neuland - Büro für Informatik</a></span>
+          <span>{t.layout.footerCredit} <a class="app-credit-link" href="https://neuland-bfi.de" target="_blank" rel="noopener noreferrer">neuland - Büro für Informatik</a></span>
         </div>
       </aside>
-      <div class="nx-backdrop" data-nx-backdrop></div>
+      <div class="app-backdrop" data-app-backdrop></div>
 
-      <main class="nx-main">
+      <main class="app-main">
         <slot />
       </main>
     </div>
@@ -209,11 +209,11 @@ const brandMark =
     <script is:inline define:vars={{ navKey: NAV_STORAGE_KEY }}>
       // Desktop: collapse the sidebar to an icon rail, remembered across pages.
       const root = document.documentElement;
-      const collapseBtn = document.querySelector('[data-nx-collapse]');
+      const collapseBtn = document.querySelector('[data-app-collapse]');
       const labels = { collapse: collapseBtn?.getAttribute('aria-label') ?? '', expand: collapseBtn?.dataset.expandLabel ?? '' };
 
       function syncCollapse() {
-        const collapsed = root.classList.contains('nx-collapsed');
+        const collapsed = root.classList.contains('app-collapsed');
         collapseBtn?.setAttribute('aria-expanded', String(!collapsed));
         if (labels.expand) {
           collapseBtn?.setAttribute('aria-label', collapsed ? labels.expand : labels.collapse);
@@ -222,7 +222,7 @@ const brandMark =
       }
 
       collapseBtn?.addEventListener('click', () => {
-        const collapsed = root.classList.toggle('nx-collapsed');
+        const collapsed = root.classList.toggle('app-collapsed');
         try {
           window.localStorage.setItem(navKey, collapsed ? 'collapsed' : 'expanded');
         } catch (_e) {
@@ -234,14 +234,14 @@ const brandMark =
 
       // Mobile drawer: open from the top bar, close via the X, the backdrop, Escape, or
       // by following a link. Pure DOM, no state beyond the class on the shell.
-      const shell = document.querySelector('.nx-shell');
-      const openBtn = document.querySelector('[data-nx-menu]');
-      const closeBtn = document.querySelector('[data-nx-close]');
-      const backdrop = document.querySelector('[data-nx-backdrop]');
-      const sidebar = document.getElementById('nx-sidebar');
+      const shell = document.querySelector('.app-shell');
+      const openBtn = document.querySelector('[data-app-menu]');
+      const closeBtn = document.querySelector('[data-app-close]');
+      const backdrop = document.querySelector('[data-app-backdrop]');
+      const sidebar = document.getElementById('app-sidebar');
 
       function setOpen(open) {
-        shell?.classList.toggle('nx-shell--open', open);
+        shell?.classList.toggle('app-shell--open', open);
         openBtn?.setAttribute('aria-expanded', String(open));
         if (open) {
           closeBtn?.focus();
@@ -250,12 +250,12 @@ const brandMark =
         }
       }
 
-      openBtn?.addEventListener('click', () => setOpen(!shell?.classList.contains('nx-shell--open')));
+      openBtn?.addEventListener('click', () => setOpen(!shell?.classList.contains('app-shell--open')));
       closeBtn?.addEventListener('click', () => setOpen(false));
       backdrop?.addEventListener('click', () => setOpen(false));
-      sidebar?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => shell?.classList.remove('nx-shell--open')));
+      sidebar?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => shell?.classList.remove('app-shell--open')));
       document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && shell?.classList.contains('nx-shell--open')) {
+        if (e.key === 'Escape' && shell?.classList.contains('app-shell--open')) {
           setOpen(false);
         }
       });

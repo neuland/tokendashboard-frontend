@@ -9,9 +9,9 @@ import type { View } from '~/lib/seriesChartData';
 import { sortedModelFamilies } from '~/lib/seriesChartData';
 import { pagePath } from '~/lib/paths';
 import { dict, type Locale } from '~/i18n';
-import DateRangePicker from '~/components/DateRangePicker';
-import ChartStatus from '~/components/ChartStatus';
-import EmptyRangeNotice from '~/components/EmptyRangeNotice';
+import DateRangePicker from './DateRangePicker';
+import ChartStatus from './ChartStatus';
+import EmptyRangeNotice from './EmptyRangeNotice';
 import PageBar from './PageBar';
 import ProviderHistoryCard from './ProviderHistoryCard';
 import KpiList from './KpiList';
@@ -39,7 +39,7 @@ interface Props {
  * Provider page: the history and the model table on the left,
  * key figures, token types and plugin tracking on the right.
  */
-export default function ProviderDetailNext({ provider, locale, title, lede }: Props): JSX.Element {
+export default function ProviderDetail({ provider, locale, title, lede }: Props): JSX.Element {
   const t = dict(locale);
   const [selection, setSelection] = useState<RangeSelection>(() => loadSelection());
   const [view, setView] = useState<View>('tokenType');
@@ -97,7 +97,7 @@ export default function ProviderDetailNext({ provider, locale, title, lede }: Pr
   const statusFrame = (content: ReactNode): JSX.Element => (
     <>
       {pageBar}
-      <div className="nx-card">{content}</div>
+      <div className="app-card">{content}</div>
     </>
   );
 
@@ -127,12 +127,12 @@ export default function ProviderDetailNext({ provider, locale, title, lede }: Pr
         tokensInOut={usage.tokensInOut}
         totalEstimatedCo2={usage.totalEstimatedCo2}
         totalCostUsdCent={usage.totalCostUsdCent}
-        scope={t.next.kpisScopeModels}
+        scope={t.dashboard.kpisScopeModels}
         locale={locale}
       />
 
-      <div className="nx-grid">
-        <div className="nx-area-main">
+      <div className="app-grid">
+        <div className="app-area-main">
           <ProviderHistoryCard series={series} range={range} view={view} onViewChange={setView} locale={locale} />
 
           {hasModels ? (
@@ -147,7 +147,7 @@ export default function ProviderDetailNext({ provider, locale, title, lede }: Pr
           )}
         </div>
 
-        <div className="nx-area-rail">
+        <div className="app-area-rail">
           <TokenTypeList tokens={usage.overallTokens} total={usage.overallTokensTotal} locale={locale} />
           <PluginCard activeUsers={usage.activeUsers} provider={provider} locale={locale} />
         </div>

@@ -158,15 +158,15 @@ existing test worth copying from:
 | --- | --- |
 | Charts never get a size, so axis and bar props never reach the DOM | `SeriesBarChart.test.tsx` walks the returned element tree; the component is pure and hook-free |
 | `navigator.clipboard` is absent, and a bare `setTimeout` leaks | `InstallCommand.test.tsx` defines the property and uses `vi.useFakeTimers()` |
-| `ACTIVE_PROVIDERS` holds all three providers, so "no data for this provider" is unreachable | `ProviderFilter.test.tsx` and `ProviderDetailNext.test.tsx` splice the mutable copy the default mock hands out |
+| `ACTIVE_PROVIDERS` holds all three providers, so "no data for this provider" is unreachable | `ProviderFilter.test.tsx` and `ProviderDetail.test.tsx` splice the mutable copy the default mock hands out |
 
-Components that fetch (`DashboardNext`, `ProviderDetailNext`) also read and write the URL and
+Components that fetch (`Dashboard`, `ProviderDetail`) also read and write the URL and
 `localStorage` on mount via `loadSelection`/`persistSelection`, so their tests clear
 both in `beforeEach`. To observe a `loading` state at all, hand the mocked fetch a
 promise the test settles itself — resolving immediately means the first assertion
 already sees the ready state.
 
-`LayoutNext.astro` and `PageIntroNext.astro` have no tests of their own; both are exercised
+`Layout.astro` and `PageIntro.astro` have no tests of their own; both are exercised
 through the page render tests below.
 
 ### Page tests
@@ -260,19 +260,17 @@ says nothing about types. Run all three before calling a change done.
 
 ## Layout and pages
 
-One design: an app shell with a grouped sidebar (`src/layouts/LayoutNext.astro` +
-`src/styles/next.css`, classes prefixed `nx-`) and the islands in `src/components/next/*`.
+An app shell with a grouped sidebar (`src/layouts/Layout.astro` + `src/styles/app.css`,
+classes prefixed `app-`) and the islands in `src/components`.
 Pages: `/`, `/provider/[provider]/`, `/faq/` (and `/en/…`).
-The `Next` in file names and the `nx-` prefix are left from the time this design was
-built next to its predecessor, which is gone.
 
 - **Links in React islands.** Islands have no `astro:i18n`, so they build page links with
   `pagePath` from `src/lib/paths.ts`.
-- **Shared components.** `DateRangePicker`, `ViewToggle`, `ProviderFilter`,
-  `SeriesBarChart`, `InstallCommand`, `FaqAsterisk` and `useUsageSeries` live directly in
-  `src/components` / `src/lib`; `next.css` restyles them under `.nx`.
+- **Restyled components.** `DateRangePicker`, `ViewToggle`, `ProviderFilter`,
+  `SeriesBarChart`, `ChartStatus` and `InstallCommand` bring their own classes from `global.css`;
+  `app.css` restyles them under `.app`, the class on `<body>`.
   `InstallCommand` and `CommandBox` (the grey terminal line on the local
-  pages) share `src/lib/useCopy.ts`; both boxes use the same `--nx-cmd-bg` grey.
+  pages) share `src/lib/useCopy.ts`; both boxes use the same `--app-cmd-bg` grey.
   The FAQ markup lives in `src/components/faq/Faq{De,En}.astro` and is mounted by
   the FAQ pages — `faqAnchors.test.ts` reads those components, not the pages.
 - **Resolution.** `useUsageSeries` carries `resolution` (`auto | day | week`) and
@@ -280,14 +278,14 @@ built next to its predecessor, which is gone.
   (`ResolutionToggle`) inside the history card, only for ranges of 14 days or more
   (`canSwitchResolution`).
 - **Calmer layout (team feedback: "erschlagend").** The three key figures are a band
-  (`KpiList`, `.nx-kpi-band`) under the page bar, not a rail card; the overview has no
+  (`KpiList`, `.app-kpi-band`) under the page bar, not a rail card; the overview has no
   rail at all (the "Hinweise" card went — its links are the sidebar's help entries).
-  `.nx-grid` places by column (`.nx-area-kpi` is the right column's optional top slot, used
-  by the project pages for the setup/server card). Only one element per card is dark:
+  `.app-grid` places by column: `.app-area-main` left, `.app-area-rail` right. Only one
+  element per card is dark:
   the view switch is text tabs, the provider filter chips with colour dots
-  (`.nx-provider-chips`, colour via `--pf-color` set by `ProviderFilter`), segmented
-  controls are light with a white chip. Labels are set in normal case (`.nx-eyebrow`,
-  table heads), numbers in the sans face with tabular digits (`.nx-num`, `.num`); the
+  (`.app-provider-chips`, colour via `--pf-color` set by `ProviderFilter`), segmented
+  controls are light with a white chip. Labels are set in normal case (`.app-eyebrow`,
+  table heads), numbers in the sans face with tabular digits (`.app-num`, `.num`); the
   mono face is for commands and addresses only. Single-entry sidebar groups carry no
   label. The plugin card unfolds its install command behind a button.
 - **Token figures: In + Out unless badged.** Every single token figure — the key figures'
@@ -301,8 +299,8 @@ built next to its predecessor, which is gone.
   entry `#total-tokens` explains the rule once, linked by the asterisk (`FaqAsterisk
   kind="tokens"`) on the key figure and on every table's "Gesamt-Tokens" head; pages carry
   no separate "ohne Cache" notes.
-- **Sidebar.** Sticky on desktop and collapsible to an icon rail (`data-nx-collapse`,
-  class `nx-collapsed` on `<html>`, remembered under `tokendashboard.nav` and applied
+- **Sidebar.** Sticky on desktop and collapsible to an icon rail (`data-app-collapse`,
+  class `app-collapsed` on `<html>`, remembered under `tokendashboard.nav` and applied
   before paint). A nav item can be teased (`soon`, a non-link with a "bald" badge) or marked
   `beta`; on `main` none is.
 - **Building blocks for upcoming areas.** Pages such as "Dieser Rechner", "Projekte" and

@@ -2,7 +2,7 @@ import type { CSSProperties, JSX } from 'react';
 import { usdCentToUsd } from '~/lib/types';
 import { formatCo2, formatTokens, formatUsd } from '~/lib/format';
 import { dict, type Locale } from '~/i18n';
-import { FaqAsterisk, type FaqAsteriskKind } from '~/components/FaqAsterisk';
+import { FaqAsterisk, type FaqAsteriskKind } from './FaqAsterisk';
 
 interface Props {
   tokensInOut: number;
@@ -33,21 +33,21 @@ export default function KpiList({ tokensInOut, totalEstimatedCo2, totalCostUsdCe
     { key: 'cost', color: COST_COLOR, label: t.kpiSummaryRow.totalCost, value: cost.value, unit: cost.unit },
   ];
   return (
-    <section className="nx-kpi-band" aria-labelledby="nx-kpis">
-      <div className="nx-kpi-band__head">
-        <h2 className="nx-kpi-band__title" id="nx-kpis">{t.next.kpis}</h2>
-        <span className="nx-kpi-band__scope">{scope}</span>
+    <section className="app-kpi-band" aria-labelledby="app-kpis">
+      <div className="app-kpi-band__head">
+        <h2 className="app-kpi-band__title" id="app-kpis">{t.dashboard.kpis}</h2>
+        <span className="app-kpi-band__scope">{scope}</span>
       </div>
-      <div className="nx-kpis">
+      <div className="app-kpis">
         {rows.map((r) => (
-          <div className="nx-kpi" key={r.key} style={{ '--nx-kpi-color': r.color } as CSSProperties}>
-            <span className="nx-eyebrow nx-kpi__label">
+          <div className="app-kpi" key={r.key} style={{ '--app-kpi-color': r.color } as CSSProperties}>
+            <span className="app-eyebrow app-kpi__label">
               {r.label}
               <FaqAsterisk kind={r.key} locale={locale} />
             </span>
-            <span className="nx-kpi__value">
-              <span className="nx-kpi__num nx-num">{r.value}</span>
-              <span className="nx-kpi__unit">{r.unit}</span>
+            <span className="app-kpi__value">
+              <span className="app-kpi__num app-num">{r.value}</span>
+              <span className="app-kpi__unit">{r.unit}</span>
             </span>
           </div>
         ))}

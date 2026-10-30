@@ -8,13 +8,13 @@ import { useUsageSeries } from '~/lib/useUsageSeries';
 import type { View } from '~/lib/seriesChartData';
 import { buildHomeChartData } from '~/lib/seriesChartData';
 import { dict, type Locale } from '~/i18n';
-import DateRangePicker from '~/components/DateRangePicker';
-import ProviderFilter from '~/components/ProviderFilter';
-import ViewToggle from '~/components/ViewToggle';
-import ChartStatus from '~/components/ChartStatus';
-import EmptyRangeNotice from '~/components/EmptyRangeNotice';
-import SeriesBarChart from '~/components/SeriesBarChart';
-import { renderHomeUsageBars } from '~/components/HomeUsageBars';
+import DateRangePicker from './DateRangePicker';
+import ProviderFilter from './ProviderFilter';
+import ViewToggle from './ViewToggle';
+import ChartStatus from './ChartStatus';
+import EmptyRangeNotice from './EmptyRangeNotice';
+import SeriesBarChart from './SeriesBarChart';
+import { renderHomeUsageBars } from './HomeUsageBars';
 import PageBar from './PageBar';
 import ResolutionToggle, { canSwitchResolution } from './ResolutionToggle';
 import SectionCard from './SectionCard';
@@ -36,11 +36,10 @@ interface Props {
 }
 
 /**
- * Home page: the key figures as a band
- * under the page bar, then the history and the provider table at full width. The FAQ
- * links that used to sit in a "Hinweise" card are the sidebar's help entries.
+ * Home page: the key figures as a band under the page bar, then the history and the
+ * provider table at full width.
  */
-export default function DashboardNext({ locale, title, lede }: Props): JSX.Element {
+export default function Dashboard({ locale, title, lede }: Props): JSX.Element {
   const t = dict(locale);
   const [selection, setSelection] = useState<RangeSelection>(() => loadSelection());
   const [selectedProviders, setSelectedProviders] = useState<Provider[]>(() => loadProviderSelection());
@@ -115,14 +114,14 @@ export default function DashboardNext({ locale, title, lede }: Props): JSX.Eleme
           tokensInOut={state.data.tokensInOut}
           totalEstimatedCo2={state.data.totalEstimatedCo2}
           totalCostUsdCent={state.data.totalCostUsdCent}
-          scope={t.next.kpisScopeProviders}
+          scope={t.dashboard.kpisScopeProviders}
           locale={locale}
         />
       )}
 
-      <div className="nx-area-main">
+      <div className="app-area-main">
         <SectionCard
-          title={t.next.history}
+          title={t.dashboard.history}
           aside={
             canSwitchResolution(rangeDays(range)) && (
               <>
@@ -136,15 +135,15 @@ export default function DashboardNext({ locale, title, lede }: Props): JSX.Eleme
               </>
             )
           }
-          headingId="nx-history"
+          headingId="app-history"
         >
-          <div className="nx-filter-row">
+          <div className="app-filter-row">
             <ViewToggle views={VIEWS} active={view} onChange={setView} locale={locale} />
             {(view === 'tokenTypeAll' || ACTIVE_PROVIDERS.length > 1) && (
-              <span className="nx-filter-row__end">
+              <span className="app-filter-row__end">
                 {view === 'tokenTypeAll' && <CacheBadge locale={locale} />}
                 {ACTIVE_PROVIDERS.length > 1 && (
-                  <span className="nx-provider-chips">
+                  <span className="app-provider-chips">
                     <ProviderFilter selected={selectedProviders} onChange={setSelectedProviders} locale={locale} />
                   </span>
                 )}

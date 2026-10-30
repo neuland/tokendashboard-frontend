@@ -5,7 +5,7 @@ import { TOKEN_TYPE_LABELS, usdCentToUsd } from '~/lib/types';
 import { tokensInOut, tokensTotal } from '~/lib/api';
 import { formatNumber, formatTokensAdaptive, formatCo2, formatUsd } from '~/lib/format';
 import { dict, type Locale } from '~/i18n';
-import { FaqAsterisk } from '~/components/FaqAsterisk';
+import { FaqAsterisk } from './FaqAsterisk';
 import { modelFamilyColors, rankFamiliesByInOut, versionColor } from '~/lib/modelColors';
 import SectionCard from './SectionCard';
 import ShareBar from './ShareBar';
@@ -43,7 +43,7 @@ interface Props {
   initialColumns?: ModelColumns;
   /**
    * The families in the order the history chart ranks them, so each bar takes the same
-   * colour as that family in "Modell-Auswertung". Without it the ranking is computed
+   * colour as that family in the chart's `model` view. Without it the ranking is computed
    * from `usage`, which matches the chart for the same range.
    */
   familyOrder?: string[];
@@ -55,7 +55,8 @@ interface Props {
 const MODEL_COL_WIDTH = 136;
 const SHARE_COL_WIDTH = 80;
 const TOKEN_COL_WIDTH = 116;
-/* The two sums have the longest heads: "Gesamt-Tokens", and the cache badge */
+/* The two sums have the longest heads: `inOut` (the `totalTokens` label plus its FAQ mark)
+   and `inclCache` (the cache badge) */
 const IN_OUT_COL_WIDTH = 128;
 const CACHE_SUM_COL_WIDTH = 132;
 const CO2_COL_WIDTH = 130;
@@ -70,7 +71,7 @@ function tokenCell(value: number, locale: Locale): JSX.Element {
 /**
  * Usage per model family, full width. "Compact" shows share, In + Out tokens, CO₂ and cost;
  * "all token types" adds the four token types and the total including cache. Shares are
- * In + Out, matching the key figures and the "Modell-Auswertung" chart. A family with
+ * In + Out, matching the key figures and the history chart's `model` view. A family with
  * several model versions expands into one indented row per version.
  */
 export default function ModelTable({ usage, locale, initialColumns = 'all', familyOrder }: Props): JSX.Element {
@@ -104,13 +105,13 @@ export default function ModelTable({ usage, locale, initialColumns = 'all', fami
 
   const columnSwitch = (
     <>
-      <span className="nx-eyebrow">{t.next.columns}</span>
-      <div className="nx-seg" role="group" aria-label={t.next.columns}>
-        <button type="button" className="nx-seg__btn" aria-pressed={columns === 'compact'} onClick={() => setColumns('compact')}>
-          {t.next.columnsCompact}
+      <span className="app-eyebrow">{t.dashboard.columns}</span>
+      <div className="app-seg" role="group" aria-label={t.dashboard.columns}>
+        <button type="button" className="app-seg__btn" aria-pressed={columns === 'compact'} onClick={() => setColumns('compact')}>
+          {t.dashboard.columnsCompact}
         </button>
-        <button type="button" className="nx-seg__btn" aria-pressed={columns === 'all'} onClick={() => setColumns('all')}>
-          {t.next.columnsAll}
+        <button type="button" className="app-seg__btn" aria-pressed={columns === 'all'} onClick={() => setColumns('all')}>
+          {t.dashboard.columnsAll}
         </button>
       </div>
     </>
@@ -118,13 +119,13 @@ export default function ModelTable({ usage, locale, initialColumns = 'all', fami
 
   return (
     <SectionCard
-      title={<>{t.next.models} <span className="nx-card__aside">{t.next.modelsNote}</span></>}
+      title={<>{t.dashboard.models} <span className="app-card__aside">{t.dashboard.modelsNote}</span></>}
       aside={columnSwitch}
       flush
-      headingId="nx-models"
+      headingId="app-models"
     >
-      <div className="nx-scroll">
-        <table className="nx-table nx-table--fixed nx-table--tight" data-columns={columns} style={{ minWidth }}>
+      <div className="app-scroll">
+        <table className="app-table app-table--fixed app-table--tight" data-columns={columns} style={{ minWidth }}>
           <colgroup>
             <col style={{ width: MODEL_COL_WIDTH }} />
             <col style={{ width: SHARE_COL_WIDTH }} />
@@ -136,15 +137,15 @@ export default function ModelTable({ usage, locale, initialColumns = 'all', fami
           </colgroup>
           <thead>
             <tr>
-              <th className="nx-sticky">{t.providerDetail.modelColumn}</th>
-              <th>{t.next.share}</th>
+              <th className="app-sticky">{t.providerDetail.modelColumn}</th>
+              <th>{t.dashboard.share}</th>
               {tokenColumns.map((c) => (
                 <th key={c} className="num">
-                  {c === 'inOut' ? <span className="nx-head-mark">{t.kpiSummaryRow.totalTokens}<FaqAsterisk kind="tokens" locale={locale} /></span> : c === 'inclCache' ? <CacheBadge locale={locale} /> : TOKEN_TYPE_LABELS[locale][c]}
+                  {c === 'inOut' ? <span className="app-head-mark">{t.kpiSummaryRow.totalTokens}<FaqAsterisk kind="tokens" locale={locale} /></span> : c === 'inclCache' ? <CacheBadge locale={locale} /> : TOKEN_TYPE_LABELS[locale][c]}
                 </th>
               ))}
-              <th className="num"><span className="nx-head-mark">{t.usageBars.co2}<FaqAsterisk kind="co2" locale={locale} /></span></th>
-              <th className="num"><span className="nx-head-mark">{t.common.costColumn}<FaqAsterisk kind="cost" locale={locale} /></span></th>
+              <th className="num"><span className="app-head-mark">{t.usageBars.co2}<FaqAsterisk kind="co2" locale={locale} /></span></th>
+              <th className="num"><span className="app-head-mark">{t.common.costColumn}<FaqAsterisk kind="cost" locale={locale} /></span></th>
             </tr>
           </thead>
           <tbody>
@@ -156,14 +157,14 @@ export default function ModelTable({ usage, locale, initialColumns = 'all', fami
               return (
                 <Fragment key={f.modelFamily}>
                   <tr>
-                    <td className="nx-sticky">
+                    <td className="app-sticky">
                       {expandable ? (
                         <button
                           type="button"
-                          className="nx-family-toggle"
+                          className="app-family-toggle"
                           onClick={() => toggle(f.modelFamily)}
                           aria-expanded={isOpen}
-                          aria-label={`${f.modelFamily}: ${isOpen ? t.next.collapseFamily : t.next.expandFamily}`}
+                          aria-label={`${f.modelFamily}: ${isOpen ? t.dashboard.collapseFamily : t.dashboard.expandFamily}`}
                         >
                           {isOpen ? <ChevronDown size={14} aria-hidden="true" /> : <ChevronRight size={14} aria-hidden="true" />}
                           {f.modelFamily}
@@ -184,8 +185,8 @@ export default function ModelTable({ usage, locale, initialColumns = 'all', fami
                       const mCo2 = formatCo2(m.estimatedCo2, locale);
                       const mCost = formatUsd(usdCentToUsd(m.costUsdCent), locale);
                       return (
-                        <tr key={m.model} className="nx-sub">
-                          <td className="nx-sticky" title={m.model}>{m.model}</td>
+                        <tr key={m.model} className="app-sub">
+                          <td className="app-sticky" title={m.model}>{m.model}</td>
                           <td><ShareBar fraction={share(m.tokens)} color={versionColor(colorOf(f.modelFamily))} thin title={`${Math.round(share(m.tokens) * 100)} %`} /></td>
                           {tokenColumns.map((c) => (
                             <td key={c} className="num">{tokenCell(columnValue(m.tokens, c), locale)}</td>
@@ -198,8 +199,8 @@ export default function ModelTable({ usage, locale, initialColumns = 'all', fami
                 </Fragment>
               );
             })}
-            <tr className="nx-total">
-              <td className="nx-sticky">{t.common.sum}</td>
+            <tr className="app-total">
+              <td className="app-sticky">{t.common.sum}</td>
               <td></td>
               {tokenColumns.map((c) => (
                 <td key={c} className="num">{tokenCell(columnValue(usage.overallTokens, c), locale)}</td>

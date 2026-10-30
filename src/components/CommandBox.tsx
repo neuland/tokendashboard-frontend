@@ -13,9 +13,9 @@ export default function CommandBox({ command, locale }: Props): JSX.Element {
   const t = dict(locale).installCommand;
   const { copied, copy } = useCopy(command);
   return (
-    <div className="nx-cmd">
-      <code className="nx-cmd__code">{command}</code>
-      <button type="button" className="nx-cmd__copy" onClick={copy} aria-label={copied ? t.copied : t.copy} title={copied ? t.copied : t.copy}>
+    <div className="app-cmd">
+      <code className="app-cmd__code">{command}</code>
+      <button type="button" className="app-cmd__copy" onClick={copy} aria-label={copied ? t.copied : t.copy} title={copied ? t.copied : t.copy}>
         {copied ? <Check size={16} strokeWidth={1.75} /> : <Copy size={16} strokeWidth={1.75} />}
       </button>
     </div>

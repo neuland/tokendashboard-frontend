@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render } from '@testing-library/react';
-import ProviderDetailNext from './ProviderDetailNext';
+import ProviderDetail from './ProviderDetail';
 import type { ProviderUsage, TokenCounts } from '~/lib/types';
 import { ACTIVE_PROVIDERS, fetchProviderUsage } from '~/lib/api';
 import { useUsageSeries } from '~/lib/useUsageSeries';
@@ -51,21 +51,21 @@ afterEach(() => {
   vi.mocked(useUsageSeries).mockReset();
 });
 
-describe('ProviderDetailNext', () => {
+describe('ProviderDetail', () => {
   it('lays the page out as history plus model table on the left, key figures, token types and plugin on the right', async () => {
     // given
     vi.mocked(fetchProviderUsage).mockResolvedValue(usage(2_000_000));
 
     // when
-    const { container } = render(<ProviderDetailNext {...props} />);
+    const { container } = render(<ProviderDetail {...props} />);
     await act(async () => {});
 
     // then
-    expect(container.querySelector('.nx-area-main')?.textContent).toContain(t.next.history);
-    expect(container.querySelector('.nx-kpi-band')?.textContent).toContain(t.next.kpisScopeModels);
-    expect(container.querySelector('.nx-area-rail')?.textContent).toContain(t.next.tokenTypes);
-    expect(container.querySelector('.nx-area-rail')?.textContent).toContain(t.next.pluginTracking);
-    expect(container.querySelector('.nx-area-main .nx-table')?.textContent).toContain('opus');
+    expect(container.querySelector('.app-area-main')?.textContent).toContain(t.dashboard.history);
+    expect(container.querySelector('.app-kpi-band')?.textContent).toContain(t.dashboard.kpisScopeModels);
+    expect(container.querySelector('.app-area-rail')?.textContent).toContain(t.dashboard.tokenTypes);
+    expect(container.querySelector('.app-area-rail')?.textContent).toContain(t.dashboard.pluginTracking);
+    expect(container.querySelector('.app-area-main .app-table')?.textContent).toContain('opus');
   });
 
   it('breadcrumbs back to the next overview with the same time window', async () => {
@@ -73,11 +73,11 @@ describe('ProviderDetailNext', () => {
     vi.mocked(fetchProviderUsage).mockResolvedValue(usage(1));
 
     // when
-    const { container } = render(<ProviderDetailNext {...props} />);
+    const { container } = render(<ProviderDetail {...props} />);
     await act(async () => {});
 
     // then
-    const crumb = container.querySelector<HTMLAnchorElement>('.nx-pagebar__crumbs a')?.getAttribute('href');
+    const crumb = container.querySelector<HTMLAnchorElement>('.app-pagebar__crumbs a')?.getAttribute('href');
     expect(crumb).toMatch(/^\/\?preset=/);
   });
 
@@ -86,11 +86,11 @@ describe('ProviderDetailNext', () => {
     vi.mocked(fetchProviderUsage).mockResolvedValue(usage(1));
 
     // when
-    const { container } = render(<ProviderDetailNext {...props} />);
+    const { container } = render(<ProviderDetail {...props} />);
     await act(async () => {});
 
     // then
-    expect(container.querySelector('.nx-big')?.textContent).toBe('7');
+    expect(container.querySelector('.app-big')?.textContent).toBe('7');
   });
 
   it('replaces the model table with the empty notice when the period has no models', async () => {
@@ -98,12 +98,12 @@ describe('ProviderDetailNext', () => {
     vi.mocked(fetchProviderUsage).mockResolvedValue(usage(0, false));
 
     // when
-    const { container } = render(<ProviderDetailNext {...props} />);
+    const { container } = render(<ProviderDetail {...props} />);
     await act(async () => {});
 
     // then
-    expect(container.querySelector('.nx-area-main .nx-table')).toBeNull();
-    expect(container.querySelector('.nx-area-main')?.textContent).toContain(t.emptyRangeNotice.message);
+    expect(container.querySelector('.app-area-main .app-table')).toBeNull();
+    expect(container.querySelector('.app-area-main')?.textContent).toContain(t.emptyRangeNotice.message);
   });
 
   it('tells an inactive provider apart from a failed request, without fetching', async () => {
@@ -111,7 +111,7 @@ describe('ProviderDetailNext', () => {
     ACTIVE_PROVIDERS.splice(ACTIVE_PROVIDERS.indexOf('claude'), 1);
 
     // when
-    const { container } = render(<ProviderDetailNext {...props} />);
+    const { container } = render(<ProviderDetail {...props} />);
     await act(async () => {});
 
     // then
@@ -122,9 +122,9 @@ describe('ProviderDetailNext', () => {
   it('marks the history with the cache badge only while the view counts cache tokens', async () => {
     // given
     vi.mocked(fetchProviderUsage).mockResolvedValue(usage(1));
-    const { container, getByRole } = render(<ProviderDetailNext {...props} />);
+    const { container, getByRole } = render(<ProviderDetail {...props} />);
     await act(async () => {});
-    const badge = (): Element | null => container.querySelector('#nx-history')?.closest('.nx-card')?.querySelector('.nx-filter-row .nx-pill--cache') ?? null;
+    const badge = (): Element | null => container.querySelector('#app-history')?.closest('.app-card')?.querySelector('.app-filter-row .app-pill--cache') ?? null;
     expect(badge()).toBeNull();
 
     // when

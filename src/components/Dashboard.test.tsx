@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render } from '@testing-library/react';
-import DashboardNext from './DashboardNext';
+import Dashboard from './Dashboard';
 import type { UsageOverview } from '~/lib/types';
 import { fetchUsageOverview } from '~/lib/api';
 import { useUsageSeries } from '~/lib/useUsageSeries';
@@ -52,14 +52,14 @@ afterEach(() => {
   vi.mocked(useUsageSeries).mockReset();
 });
 
-describe('DashboardNext', () => {
+describe('Dashboard', () => {
   it('renders the page bar with the title, the resolution switch at the chart, and loading', async () => {
     // given
     const first = deferred<UsageOverview>();
     vi.mocked(fetchUsageOverview).mockReturnValue(first.promise);
 
     // when
-    const { container, getByRole } = render(<DashboardNext {...props} />);
+    const { container, getByRole } = render(<Dashboard {...props} />);
 
     // then
     expect(container.querySelector('h1')?.textContent).toBe(props.title);
@@ -78,7 +78,7 @@ describe('DashboardNext', () => {
     vi.mocked(fetchUsageOverview).mockResolvedValue(overview(1));
 
     // when
-    const { queryByRole } = render(<DashboardNext {...props} />);
+    const { queryByRole } = render(<Dashboard {...props} />);
     await act(async () => {});
 
     // then
@@ -90,15 +90,15 @@ describe('DashboardNext', () => {
     vi.mocked(fetchUsageOverview).mockResolvedValue(overview(1_234_567));
 
     // when
-    const { container } = render(<DashboardNext {...props} />);
+    const { container } = render(<Dashboard {...props} />);
     await act(async () => {});
 
     // then
-    const kpi = container.querySelector('.nx-kpi-band');
-    expect(kpi?.textContent).toContain(t.next.kpis);
+    const kpi = container.querySelector('.app-kpi-band');
+    expect(kpi?.textContent).toContain(t.dashboard.kpis);
     expect(kpi?.textContent).toContain('1,2');
-    expect(container.querySelector('.nx-table')).not.toBeNull();
-    expect(container.querySelector('.nx-table [title="1.234.567"]')).not.toBeNull();
+    expect(container.querySelector('.app-table')).not.toBeNull();
+    expect(container.querySelector('.app-table [title="1.234.567"]')).not.toBeNull();
   });
 
   it('links each provider row to its provider page, carrying the time window', async () => {
@@ -106,11 +106,11 @@ describe('DashboardNext', () => {
     vi.mocked(fetchUsageOverview).mockResolvedValue(overview(10));
 
     // when
-    const { container } = render(<DashboardNext {...props} />);
+    const { container } = render(<Dashboard {...props} />);
     await act(async () => {});
 
     // then
-    const href = container.querySelector<HTMLAnchorElement>('.nx-table a.nx-row-link')?.getAttribute('href');
+    const href = container.querySelector<HTMLAnchorElement>('.app-table a.app-row-link')?.getAttribute('href');
     expect(href).toMatch(/^\/provider\/claude\/\?preset=/);
   });
 
@@ -119,11 +119,11 @@ describe('DashboardNext', () => {
     vi.mocked(fetchUsageOverview).mockResolvedValue(overview(0));
 
     // when
-    const { container } = render(<DashboardNext {...props} />);
+    const { container } = render(<Dashboard {...props} />);
     await act(async () => {});
 
     // then
-    expect(container.querySelector('.nx-table')).toBeNull();
+    expect(container.querySelector('.app-table')).toBeNull();
     expect(container.textContent).toContain(t.emptyRangeNotice.message);
   });
 
@@ -132,7 +132,7 @@ describe('DashboardNext', () => {
     vi.mocked(fetchUsageOverview).mockRejectedValue(new Error('boom'));
 
     // when
-    const { container } = render(<DashboardNext {...props} />);
+    const { container } = render(<Dashboard {...props} />);
     await act(async () => {});
 
     // then
@@ -142,9 +142,9 @@ describe('DashboardNext', () => {
   it('marks the history with the cache badge only while the view counts cache tokens', async () => {
     // given
     vi.mocked(fetchUsageOverview).mockResolvedValue(overview(1));
-    const { container, getByRole } = render(<DashboardNext {...props} />);
+    const { container, getByRole } = render(<Dashboard {...props} />);
     await act(async () => {});
-    const badge = (): Element | null => container.querySelector('#nx-history')?.closest('.nx-card')?.querySelector('.nx-filter-row .nx-pill--cache') ?? null;
+    const badge = (): Element | null => container.querySelector('#app-history')?.closest('.app-card')?.querySelector('.app-filter-row .app-pill--cache') ?? null;
     expect(badge()).toBeNull();
 
     // when

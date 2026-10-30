@@ -57,11 +57,11 @@ describe('ModelTable columns', () => {
     expect(headers(container)).toContain(TOKEN_TYPE_LABELS.de.cacheRead);
 
     // when
-    fireEvent.click(getByRole('button', { name: t.next.columnsCompact }));
+    fireEvent.click(getByRole('button', { name: t.dashboard.columnsCompact }));
 
     // then
     expect(headers(container)).not.toContain(TOKEN_TYPE_LABELS.de.cacheRead);
-    expect(headers(container)).toEqual([t.providerDetail.modelColumn, t.next.share, t.kpiSummaryRow.totalTokens, t.usageBars.co2, t.common.costColumn]);
+    expect(headers(container)).toEqual([t.providerDetail.modelColumn, t.dashboard.share, t.kpiSummaryRow.totalTokens, t.usageBars.co2, t.common.costColumn]);
   });
 
   it('lists all token types, then both sums side by side, the one including cache badged', () => {
@@ -71,11 +71,11 @@ describe('ModelTable columns', () => {
     // then
     const l = TOKEN_TYPE_LABELS.de;
     expect(headers(container)).toEqual([
-      t.providerDetail.modelColumn, t.next.share,
+      t.providerDetail.modelColumn, t.dashboard.share,
       l.input, l.output, l.cacheWrite, l.cacheRead, t.kpiSummaryRow.totalTokens, t.common.inclCache,
       t.usageBars.co2, t.common.costColumn,
     ]);
-    expect(container.querySelectorAll('thead .nx-pill--cache')).toHaveLength(1);
+    expect(container.querySelectorAll('thead .app-pill--cache')).toHaveLength(1);
   });
 
   it('links the Gesamt-Tokens head to the FAQ entry on why cache is left out', () => {
@@ -102,7 +102,7 @@ describe('ModelTable share', () => {
   it('sizes the share bar by the family share of In + Out, like the key figures and the chart', () => {
     // given / when
     const { container } = render(<ModelTable usage={usage()} locale="de" />);
-    const fills = [...container.querySelectorAll('tbody .nx-share__fill')].map((el) => (el as HTMLElement).style.width);
+    const fills = [...container.querySelectorAll('tbody .app-share__fill')].map((el) => (el as HTMLElement).style.width);
 
     // then — opus 750 of 1000, haiku 250 of 1000; with its cache reads opus would be 96 %
     expect(fills).toEqual(['75%', '25%']);
@@ -115,8 +115,8 @@ describe('ModelTable version bars', () => {
     const { container, getByRole } = render(<ModelTable usage={usage()} locale="de" />);
 
     // when
-    fireEvent.click(getByRole('button', { name: `opus: ${t.next.expandFamily}` }));
-    const fills = [...container.querySelectorAll('tr.nx-sub .nx-share__fill')].map((el) => (el as HTMLElement).style.width);
+    fireEvent.click(getByRole('button', { name: `opus: ${t.dashboard.expandFamily}` }));
+    const fills = [...container.querySelectorAll('tr.app-sub .app-share__fill')].map((el) => (el as HTMLElement).style.width);
 
     // then — 600 and 150 of 1000, inside opus' 75 %
     expect(fills).toEqual(['60%', '15%']);
@@ -125,7 +125,7 @@ describe('ModelTable version bars', () => {
 
 describe('ModelTable colours', () => {
   function familyBarColors(container: HTMLElement): string[] {
-    return [...container.querySelectorAll('tbody tr:not(.nx-sub) .nx-share__fill')].map((el) => (el as HTMLElement).style.background);
+    return [...container.querySelectorAll('tbody tr:not(.app-sub) .app-share__fill')].map((el) => (el as HTMLElement).style.background);
   }
 
   it('colours each family bar like that family in the history chart', () => {
@@ -157,7 +157,7 @@ describe('ModelTable layout', () => {
 
     // then
     expect(cols).toHaveLength(headers.length);
-    expect(container.querySelector('table')?.className).toContain('nx-table--fixed');
+    expect(container.querySelector('table')?.className).toContain('app-table--fixed');
   });
 
   it('keeps the colgroup in step with the compact view', () => {
@@ -165,7 +165,7 @@ describe('ModelTable layout', () => {
     const { container, getByRole } = render(<ModelTable usage={usage()} locale="de" />);
 
     // when
-    fireEvent.click(getByRole('button', { name: t.next.columnsCompact }));
+    fireEvent.click(getByRole('button', { name: t.dashboard.columnsCompact }));
 
     // then
     expect(container.querySelectorAll('colgroup col')).toHaveLength(container.querySelectorAll('thead th').length);
@@ -176,14 +176,14 @@ describe('ModelTable families', () => {
   it('expands a family with several versions into one row per version, and collapses it again', () => {
     // given
     const { container, getByRole } = render(<ModelTable usage={usage()} locale="de" />);
-    const toggle = getByRole('button', { name: `opus: ${t.next.expandFamily}` });
+    const toggle = getByRole('button', { name: `opus: ${t.dashboard.expandFamily}` });
     expect(container.textContent).not.toContain('claude-opus-5-5');
 
     // when
     fireEvent.click(toggle);
 
     // then
-    expect(container.querySelectorAll('tr.nx-sub')).toHaveLength(2);
+    expect(container.querySelectorAll('tr.app-sub')).toHaveLength(2);
     expect(container.textContent).toContain('claude-opus-5-5');
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
 
@@ -191,7 +191,7 @@ describe('ModelTable families', () => {
     fireEvent.click(toggle);
 
     // then
-    expect(container.querySelectorAll('tr.nx-sub')).toHaveLength(0);
+    expect(container.querySelectorAll('tr.app-sub')).toHaveLength(0);
   });
 
   it('offers no toggle for a family with a single version', () => {
@@ -199,13 +199,13 @@ describe('ModelTable families', () => {
     const { queryByRole } = render(<ModelTable usage={usage()} locale="de" />);
 
     // then
-    expect(queryByRole('button', { name: `haiku: ${t.next.expandFamily}` })).toBeNull();
+    expect(queryByRole('button', { name: `haiku: ${t.dashboard.expandFamily}` })).toBeNull();
   });
 
   it('closes with a sum row for every column', () => {
     // given / when
     const { container } = render(<ModelTable usage={usage()} locale="de" />);
-    const cells = [...(container.querySelector('tr.nx-total')?.querySelectorAll('td') ?? [])].map((td) => td.textContent);
+    const cells = [...(container.querySelector('tr.app-total')?.querySelectorAll('td') ?? [])].map((td) => td.textContent);
 
     // then — input, output, cache write, cache read, In + Out, including cache
     expect(cells.slice(0, 8)).toEqual([t.common.sum, '', '1.000', '0', '0', '5.000', '1.000', '6.000']);

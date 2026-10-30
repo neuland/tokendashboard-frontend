@@ -18,7 +18,7 @@ describe('KpiList', () => {
     const { container } = render(<KpiList {...figures} scope="Alle Provider" locale="de" />);
 
     // then
-    const marks = Array.from(container.querySelectorAll('.nx-kpi__label .footnote-mark')).map((a) => a.getAttribute('href'));
+    const marks = Array.from(container.querySelectorAll('.app-kpi__label .footnote-mark')).map((a) => a.getAttribute('href'));
     expect(marks).toEqual([
       `/faq/#${t.faqAsterisk.tokens.id}`,
       `/faq/#${t.faqAsterisk.co2.id}`,

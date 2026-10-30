@@ -27,7 +27,7 @@ export default function ResolutionToggle({ resolution, granularity, onChange, di
   ];
   return (
     <div
-      className="nx-seg nx-seg--compact"
+      className="app-seg app-seg--compact"
       role="group"
       aria-label={t.resolution.label}
       title={t.resolution.autoHint}
@@ -37,7 +37,7 @@ export default function ResolutionToggle({ resolution, granularity, onChange, di
         <button
           key={o.value}
           type="button"
-          className="nx-seg__btn"
+          className="app-seg__btn"
           aria-pressed={granularity === o.value}
           disabled={disabled}
           onClick={() => onChange(o.value)}

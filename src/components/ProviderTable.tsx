@@ -6,7 +6,7 @@ import type { RangeSelection } from '~/lib/range';
 import { withRangeParams } from '~/lib/range';
 import { pagePath } from '~/lib/paths';
 import { dict, type Locale } from '~/i18n';
-import { FaqAsterisk } from '~/components/FaqAsterisk';
+import { FaqAsterisk } from './FaqAsterisk';
 import SectionCard from './SectionCard';
 import ShareBar from './ShareBar';
 import ProviderGlyph from './ProviderGlyph';
@@ -39,19 +39,19 @@ export default function ProviderTable({ overview, selection, locale }: Props): J
 
   return (
     <SectionCard
-      title={t.next.byProvider}
+      title={t.dashboard.byProvider}
       flush
-      headingId="nx-by-provider"
+      headingId="app-by-provider"
     >
-      <div className="nx-scroll">
-        <table className="nx-table nx-table--tight">
+      <div className="app-scroll">
+        <table className="app-table app-table--tight">
           <thead>
             <tr>
               <th>{t.providerComparison.providerColumn}</th>
-              <th style={{ width: '15%' }}>{t.next.share}</th>
-              <th className="num"><span className="nx-head-mark">{t.kpiSummaryRow.totalTokens}<FaqAsterisk kind="tokens" locale={locale} /></span></th>
-              <th className="num"><span className="nx-head-mark">{t.usageBars.co2}<FaqAsterisk kind="co2" locale={locale} /></span></th>
-              <th className="num"><span className="nx-head-mark">{t.common.costColumn}<FaqAsterisk kind="cost" locale={locale} /></span></th>
+              <th style={{ width: '15%' }}>{t.dashboard.share}</th>
+              <th className="num"><span className="app-head-mark">{t.kpiSummaryRow.totalTokens}<FaqAsterisk kind="tokens" locale={locale} /></span></th>
+              <th className="num"><span className="app-head-mark">{t.usageBars.co2}<FaqAsterisk kind="co2" locale={locale} /></span></th>
+              <th className="num"><span className="app-head-mark">{t.common.costColumn}<FaqAsterisk kind="cost" locale={locale} /></span></th>
             </tr>
           </thead>
           <tbody>
@@ -62,7 +62,7 @@ export default function ProviderTable({ overview, selection, locale }: Props): J
               return (
                 <tr key={r.provider}>
                   <td>
-                    <a className="nx-row-link" href={href(r.provider)}>
+                    <a className="app-row-link" href={href(r.provider)}>
                       <ProviderGlyph provider={r.provider} muted={!live} />
                       {PROVIDER_LABELS[locale][r.provider]}
                     </a>
@@ -74,7 +74,7 @@ export default function ProviderTable({ overview, selection, locale }: Props): J
                 </tr>
               );
             })}
-            <tr className="nx-total">
+            <tr className="app-total">
               <td>{t.common.sum}</td>
               <td></td>
               <td className="num">{tokenCell(grand, locale)}</td>

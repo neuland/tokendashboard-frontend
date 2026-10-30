@@ -14,7 +14,7 @@ interface Props {
 export default function ProviderGlyph({ provider, size = 16, muted = false }: Props): JSX.Element {
   return (
     <svg
-      className="nx-glyph"
+      className="app-glyph"
       width={size}
       height={size}
       viewBox="0 0 24 24"

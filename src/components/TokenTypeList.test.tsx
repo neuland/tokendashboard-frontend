@@ -19,9 +19,9 @@ describe('TokenTypeList', () => {
     const { container } = render(<TokenTypeList tokens={tokens} total={1_004_000} locale="de" />);
 
     // then
-    const groups = Array.from(container.querySelectorAll('.nx-tgroup__head > span:first-child')).map((s) => s.textContent);
-    expect(groups).toEqual([t.next.tokenGroups.inOut, t.next.tokenGroups.cache]);
-    const labels = Array.from(container.querySelectorAll('.nx-trow__line > span:first-child')).map((s) => s.textContent);
+    const groups = Array.from(container.querySelectorAll('.app-tgroup__head > span:first-child')).map((s) => s.textContent);
+    expect(groups).toEqual([t.dashboard.tokenGroups.inOut, t.dashboard.tokenGroups.cache]);
+    const labels = Array.from(container.querySelectorAll('.app-trow__line > span:first-child')).map((s) => s.textContent);
     expect(labels).toEqual(TOKEN_TYPES.map((tt) => TOKEN_TYPE_LABELS.de[tt]));
   });
 
@@ -33,7 +33,7 @@ describe('TokenTypeList', () => {
     const { container } = render(<TokenTypeList tokens={tokens} total={1_004_000} locale="de" />);
 
     // then
-    const widths = Array.from(container.querySelectorAll('.nx-share__fill')).map((el) => (el as HTMLElement).style.width);
+    const widths = Array.from(container.querySelectorAll('.app-share__fill')).map((el) => (el as HTMLElement).style.width);
     expect(widths).toEqual(['25%', '75%', '1%', '99%']);
   });
 
@@ -45,9 +45,9 @@ describe('TokenTypeList', () => {
     const { container } = render(<TokenTypeList tokens={tokens} total={1_004_000} locale="de" />);
 
     // then
-    const aside = container.querySelector('.nx-card__aside');
+    const aside = container.querySelector('.app-card__aside');
     expect(aside?.textContent).toBe(`1,0 Mio.${t.common.inclCache}`);
-    expect(aside?.querySelector('.nx-pill--cache')?.textContent).toBe(t.common.inclCache);
-    expect(container.querySelector('.nx-note')).toBeNull();
+    expect(aside?.querySelector('.app-pill--cache')?.textContent).toBe(t.common.inclCache);
+    expect(container.querySelector('.app-note')).toBeNull();
   });
 });
