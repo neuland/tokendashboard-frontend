@@ -12,7 +12,7 @@ test('switches locale via the sidebar switcher and keeps the current page', asyn
   await expect(page.getByRole('navigation').getByRole('link', { name: 'Firmenweit', exact: true })).toBeVisible();
 
   // when — switching to English via the locale switcher
-  await page.locator('.nx-locale').getByRole('link', { name: 'EN', exact: true }).click();
+  await page.locator('.app-locale').getByRole('link', { name: 'EN', exact: true }).click();
 
   // then — same route, now under /en/ and rendered in English
   await expect(page).toHaveURL(/\/en\/faq\/?$/);
@@ -20,7 +20,7 @@ test('switches locale via the sidebar switcher and keeps the current page', asyn
   await expect(page.getByRole('navigation').getByRole('link', { name: 'Company-wide', exact: true })).toBeVisible();
 
   // when — switching back from within /en/
-  await page.locator('.nx-locale').getByRole('link', { name: 'DE', exact: true }).click();
+  await page.locator('.app-locale').getByRole('link', { name: 'DE', exact: true }).click();
 
   // then — back on the unprefixed German route
   await expect(page).toHaveURL(/\/faq\/?$/);

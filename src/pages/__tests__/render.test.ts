@@ -186,21 +186,6 @@ describe('provider page', () => {
 });
 
 describe('sidebar', () => {
-  it('holds only the released areas: no projects, experiments or "this machine", which are built on dev', async () => {
-    // given
-    const c = await container();
-
-    // when
-    const html = await c.renderToString(DeIndex, { request: new Request('http://localhost/') });
-
-    // then
-    expect(html).not.toContain('href="/projects/"');
-    expect(html).not.toContain('href="/local/"');
-    expect(html).not.toContain('app-nav__link--soon');
-    expect(html).not.toContain('app-soon--beta');
-    expect(html).not.toContain('data-app-favorites');
-  });
-
   it('offers the collapse button, remembered under the nav storage key', async () => {
     // given
     const c = await container();

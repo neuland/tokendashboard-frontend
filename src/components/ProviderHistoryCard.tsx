@@ -33,7 +33,7 @@ interface Props {
 /**
  * The history card of a provider-shaped page: view switch, resolution switch when the
  * range allows it, and the stacked chart by token type or model family. Used by the
- * provider pages and by "this machine", whose local server answers the same shape.
+ * provider pages.
  */
 export default function ProviderHistoryCard({ series, range, view, onViewChange, views = PROVIDER_VIEWS, faqMark, locale }: Props): JSX.Element {
   const t = dict(locale);
