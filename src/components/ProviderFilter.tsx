@@ -1,6 +1,6 @@
-import type { JSX } from 'react';
+import type { CSSProperties, JSX } from 'react';
 import type { Provider } from '~/lib/types';
-import { PROVIDER_SHORT_LABELS } from '~/lib/types';
+import { PROVIDER_COLORS, PROVIDER_SHORT_LABELS } from '~/lib/types';
 import { ACTIVE_PROVIDERS } from '~/lib/api';
 import { dict, type Locale } from '~/i18n';
 
@@ -39,6 +39,7 @@ export default function ProviderFilter({ selected, onChange, disabled, locale }:
             aria-pressed={active}
             disabled={disabled}
             onClick={() => toggle(provider)}
+            style={{ '--pf-color': PROVIDER_COLORS[provider] } as CSSProperties}
           >
             {PROVIDER_SHORT_LABELS[locale][provider]}
           </button>

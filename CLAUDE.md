@@ -10,7 +10,7 @@ to `src/`. Siblings stay relative:
 ```ts
 import { usdCentToUsd } from '~/lib/types';
 import { dict, type Locale } from '~/i18n';
-import KpiCard from './KpiCard';
+import SectionCard from './SectionCard';
 ```
 
 `../lib/api` and `../../lib/api` are rejected by
@@ -151,23 +151,22 @@ query, `rerender` feeds in new props (which is how the prop-following behaviour 
 `ResponsiveContainer` subscribes to on mount. Without it every component that renders
 a chart throws on render rather than failing an assertion.
 
-Four things the jsdom environment does not give you, each already worked around in an
+Three things the jsdom environment does not give you, each already worked around in an
 existing test worth copying from:
 
 | Obstacle | Where it is solved |
 | --- | --- |
 | Charts never get a size, so axis and bar props never reach the DOM | `SeriesBarChart.test.tsx` walks the returned element tree; the component is pure and hook-free |
 | `navigator.clipboard` is absent, and a bare `setTimeout` leaks | `InstallCommand.test.tsx` defines the property and uses `vi.useFakeTimers()` |
-| `ACTIVE_PROVIDERS` holds all three providers, so "no data for this provider" is unreachable | `ProviderFilter.test.tsx` and `ProviderDetail.test.tsx` splice the mutable copy the default mock hands out |
-| A child that fetches puts a second `loading` in the tree and masks the parent's own state | `Dashboard.test.tsx` stubs `./HomeUsageSeriesChart`; the chart has its own test file |
+| `ACTIVE_PROVIDERS` holds all three providers, so "no data for this provider" is unreachable | `ProviderFilter.test.tsx` and `ProviderDetailNext.test.tsx` splice the mutable copy the default mock hands out |
 
-Components that fetch (`Dashboard`, `ProviderDetail`) also read and write the URL and
+Components that fetch (`DashboardNext`, `ProviderDetailNext`) also read and write the URL and
 `localStorage` on mount via `loadSelection`/`persistSelection`, so their tests clear
 both in `beforeEach`. To observe a `loading` state at all, hand the mocked fetch a
 promise the test settles itself — resolving immediately means the first assertion
 already sees the ready state.
 
-`DecoBars.astro` and `Header.astro` have no tests of their own; both are exercised
+`LayoutNext.astro` and `PageIntroNext.astro` have no tests of their own; both are exercised
 through the page render tests below.
 
 ### Page tests
@@ -234,8 +233,8 @@ mock, never the decision to use one. There are three:
 Module state is per test file, so one file splicing `ACTIVE_PROVIDERS` cannot affect
 another — restoring it in `afterEach` is about the other tests in the *same* file.
 
-A stub needed by only one test file stays an inline factory, as `Dashboard.test.tsx`
-does for its chart. Both forms next to each other are worth keeping: a bare `vi.mock`
+A stub needed by only one test file stays an inline factory (`vi.mock(path, () => …)`)
+in that file. Both forms next to each other are worth keeping: a bare `vi.mock`
 means "shared default", a factory means "this file only".
 
 **One sharp edge.** If a module grows a new export and the `__mocks__` file is not
@@ -258,3 +257,56 @@ while types are broken. The separate gates are:
 Neither substitutes for the other: ESLint is deliberately configured *without*
 type-aware rules (see the comment at the top of `eslint.config.js`), so a green lint
 says nothing about types. Run all three before calling a change done.
+
+## Layout and pages
+
+One design: an app shell with a grouped sidebar (`src/layouts/LayoutNext.astro` +
+`src/styles/next.css`, classes prefixed `nx-`) and the islands in `src/components/next/*`.
+Pages: `/`, `/provider/[provider]/`, `/faq/` (and `/en/…`).
+The `Next` in file names and the `nx-` prefix are left from the time this design was
+built next to its predecessor, which is gone.
+
+- **Links in React islands.** Islands have no `astro:i18n`, so they build page links with
+  `pagePath` from `src/lib/paths.ts`.
+- **Shared components.** `DateRangePicker`, `ViewToggle`, `ProviderFilter`,
+  `SeriesBarChart`, `InstallCommand`, `FaqAsterisk` and `useUsageSeries` live directly in
+  `src/components` / `src/lib`; `next.css` restyles them under `.nx`.
+  `InstallCommand` and `CommandBox` (the grey terminal line on the local
+  pages) share `src/lib/useCopy.ts`; both boxes use the same `--nx-cmd-bg` grey.
+  The FAQ markup lives in `src/components/faq/Faq{De,En}.astro` and is mounted by
+  the FAQ pages — `faqAnchors.test.ts` reads those components, not the pages.
+- **Resolution.** `useUsageSeries` carries `resolution` (`auto | day | week`) and
+  `setResolution`, shown as the compact "Tag | Woche" switch
+  (`ResolutionToggle`) inside the history card, only for ranges of 14 days or more
+  (`canSwitchResolution`).
+- **Calmer layout (team feedback: "erschlagend").** The three key figures are a band
+  (`KpiList`, `.nx-kpi-band`) under the page bar, not a rail card; the overview has no
+  rail at all (the "Hinweise" card went — its links are the sidebar's help entries).
+  `.nx-grid` places by column (`.nx-area-kpi` is the right column's optional top slot, used
+  by the project pages for the setup/server card). Only one element per card is dark:
+  the view switch is text tabs, the provider filter chips with colour dots
+  (`.nx-provider-chips`, colour via `--pf-color` set by `ProviderFilter`), segmented
+  controls are light with a white chip. Labels are set in normal case (`.nx-eyebrow`,
+  table heads), numbers in the sans face with tabular digits (`.nx-num`, `.num`); the
+  mono face is for commands and addresses only. Single-entry sidebar groups carry no
+  label. The plugin card unfolds its install command behind a button.
+- **Token figures: In + Out unless badged.** Every single token figure — the key figures'
+  "Gesamt-Tokens", table columns, shares, the history views — counts input + output only
+  (`tokensInOut`). Cache tokens are counted only where the page breaks usage down by token
+  type, and each such place carries `CacheBadge` ("inkl. Cache"): the head of
+  `TokenTypeList`, the history card while "Token inkl. Cache" (`tokenTypeAll`) is active,
+  and the last token column of `ModelTable` under "Alle Token-Typen" (which lists the four
+  types, then both sums side by side: Gesamt-Tokens and inkl. Cache). "Gesamt"
+  is never used for a figure that includes cache, and table sum rows say "Summe". The FAQ
+  entry `#total-tokens` explains the rule once, linked by the asterisk (`FaqAsterisk
+  kind="tokens"`) on the key figure and on every table's "Gesamt-Tokens" head; pages carry
+  no separate "ohne Cache" notes.
+- **Sidebar.** Sticky on desktop and collapsible to an icon rail (`data-nx-collapse`,
+  class `nx-collapsed` on `<html>`, remembered under `tokendashboard.nav` and applied
+  before paint). A nav item can be teased (`soon`, a non-link with a "bald" badge) or marked
+  `beta`; on `main` none is.
+- **Building blocks for upcoming areas.** Pages such as "Dieser Rechner", "Projekte" and
+  "Experimente" are not part of this repository yet. It keeps only the shared building
+  blocks they reuse: `createApi({ baseUrl, token, params })` in `src/lib/api.ts` (the
+  module-level fetch functions are the backend client, `backendApi`), `LOCAL_VIEWS` and
+  `faqMark` on `ProviderHistoryCard`.

@@ -1,0 +1,264 @@
+---
+// The app shell: a grouped sidebar (overview / providers / help) on the left, the page content on the right. The sidebar stays put
+// while the page scrolls and collapses to an icon rail; below 900px it becomes a
+// drawer behind a menu button in a top bar.
+import '~/styles/global.css';
+import '~/styles/next.css';
+import { getRelativeLocaleUrl } from 'astro:i18n';
+import { PROVIDERS, PROVIDER_SHORT_LABELS, PROVIDER_COLORS } from '~/lib/types';
+import { PROVIDER_ICON_PATHS } from '~/lib/providerIcons';
+import { dict, DEFAULT_LOCALE, LOCALES, type Locale } from '~/i18n';
+import { formatDate } from '~/lib/format';
+import { COMPANY_NAME } from '~/lib/company';
+
+interface Props {
+  title?: string;
+}
+const locale = (Astro.currentLocale as Locale | undefined) ?? DEFAULT_LOCALE;
+const t = dict(locale);
+
+const { title = t.layout.title(COMPANY_NAME) } = Astro.props;
+const base = import.meta.env.BASE_URL; // has a trailing slash
+const description = t.layout.description(COMPANY_NAME);
+
+/** localStorage key remembering a collapsed sidebar; read before paint, see <head>. */
+const NAV_STORAGE_KEY = 'tokendashboard.nav';
+
+const pageUrl = (rest = ''): string => getRelativeLocaleUrl(locale, rest);
+
+// Compare paths trailing-slash-insensitively to mark the current nav item.
+const normalize = (p: string): string => (p.endsWith('/') ? p : `${p}/`);
+const current = normalize(Astro.url.pathname);
+const isActive = (href: string): boolean => normalize(href) === current;
+
+type Icon = 'grid' | 'help' | 'leaf' | 'plug';
+interface NavItem {
+  href?: string;
+  label: string;
+  icon?: Icon;
+  /** A provider logo, drawn in `color`. */
+  glyph?: string;
+  color?: string;
+  active: boolean;
+  /** Teased only: rendered without a link, marked "soon". */
+  soon?: boolean;
+  /** Built, but still marked "beta" next to the label. */
+  beta?: boolean;
+}
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
+const faqUrl = pageUrl('faq/');
+const groups: NavGroup[] = [
+  {
+    label: t.nav.groupOverview,
+    items: [{ href: pageUrl(), label: t.nav.companyWide, icon: 'grid', active: isActive(pageUrl()) }],
+  },
+  {
+    label: t.nav.groupProviders,
+    items: PROVIDERS.map((p) => {
+      const href = pageUrl(`provider/${p}/`);
+      return { href, label: PROVIDER_SHORT_LABELS[locale][p], glyph: PROVIDER_ICON_PATHS[p], color: PROVIDER_COLORS[p], active: isActive(href) };
+    }),
+  },
+  {
+    label: t.nav.groupHelp,
+    items: [
+      { href: faqUrl, label: t.nav.faq, icon: 'help', active: isActive(faqUrl) },
+      { href: `${faqUrl}#${t.faqAsterisk.co2.id}`, label: t.nav.co2Method, icon: 'leaf', active: false },
+      { href: `${faqUrl}#plugins`, label: t.nav.installPlugins, icon: 'plug', active: false },
+    ],
+  },
+];
+
+// Strip the current locale prefix so the switcher can rebuild the path in the other locale.
+const pathWithoutLocale = Astro.url.pathname.replace(new RegExp(`^${base}(en/)?`), '');
+const switcherHref = (l: Locale): string => getRelativeLocaleUrl(l, pathWithoutLocale);
+
+// Static build: evaluated once at build time, so this dates the deployment, not the visit.
+const now = new Date();
+const buildDate = formatDate(
+  `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`,
+  locale,
+);
+
+const brandMark =
+  'M70.29,75.2h15.8v-28.87h-15.8v-11.58C70.29,15.55,54.55,0,35.14,0S0,15.55,0,34.74v40.46h30.88v-42.53c0-2.33,1.91-4.21,4.26-4.21s4.26,1.88,4.26,4.21v42.53h30.88Z';
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <script is:inline define:vars={{ navKey: NAV_STORAGE_KEY }}>
+      // Collapsed sidebar: applied before paint so the rail never jumps on load.
+      try {
+        if (window.localStorage.getItem(navKey) === 'collapsed') {
+          document.documentElement.classList.add('nx-collapsed');
+        }
+      } catch (_e) {
+        // Storage unavailable: start expanded.
+      }
+    </script>
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:locale" content={locale === 'de' ? 'de_DE' : 'en_US'} />
+    {LOCALES.filter((l) => l !== locale).map((l) => (
+      <meta property="og:locale:alternate" content={l === 'de' ? 'de_DE' : 'en_US'} />
+    ))}
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+  </head>
+  <body class="nx">
+    <div class="nx-shell">
+      <header class="nx-topbar">
+        <a href={pageUrl()} class="nx-brand" aria-label={t.layout.homeAriaLabel}>
+          <svg class="nx-brand__mark" viewBox="0 0 86 76" aria-hidden="true"><path fill="currentColor" d={brandMark}></path></svg>
+          <span class="nx-brand__text">{COMPANY_NAME || 'neuland'}<span class="nx-brand__sub">{t.layout.brandSub}</span></span>
+        </a>
+        <button type="button" class="nx-menu-btn" aria-label={t.nav.menuOpen} aria-controls="nx-sidebar" aria-expanded="false" data-nx-menu>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+        </button>
+      </header>
+
+      <aside class="nx-sidebar" id="nx-sidebar">
+        <div class="nx-sidebar__close">
+          <span class="nx-eyebrow">{t.layout.navAriaLabel}</span>
+          <button type="button" class="nx-menu-btn" aria-label={t.nav.menuClose} data-nx-close>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+          </button>
+        </div>
+        <a href={pageUrl()} class="nx-brand" aria-label={t.layout.homeAriaLabel}>
+          <svg class="nx-brand__mark" viewBox="0 0 86 76" aria-hidden="true"><path fill="currentColor" d={brandMark}></path></svg>
+          <span class="nx-brand__text nx-fade">{COMPANY_NAME || 'neuland'}<span class="nx-brand__sub">{t.layout.brandSub}</span></span>
+        </a>
+        <div class="nx-sidebar__toggle">
+          <button type="button" class="nx-collapse-btn" aria-label={t.nav.collapse} title={t.nav.collapse} data-expand-label={t.nav.expand} aria-expanded="true" aria-controls="nx-sidebar" data-nx-collapse>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+          </button>
+        </div>
+        <nav class="nx-nav" aria-label={t.layout.navAriaLabel}>
+          {groups.map((g) => (
+            <div class="nx-nav__group">
+              {g.items.length > 1 && <span class="nx-eyebrow nx-nav__label nx-fade">{g.label}</span>}
+              {g.items.map((item) => {
+                const inner = (
+                  <>
+                    {item.glyph && (
+                      <svg class="nx-glyph" width="16" height="16" viewBox="0 0 24 24" fill={item.color} aria-hidden="true"><path d={item.glyph}></path></svg>
+                    )}
+                    {item.icon === 'grid' && (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
+                    )}
+                    {item.icon === 'help' && (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"></path></svg>
+                    )}
+                    {item.icon === 'leaf' && (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path><path d="M2 21c0-3 1.85-5.36 5.08-6"></path></svg>
+                    )}
+                    {item.icon === 'plug' && (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22v-5M9 8V2M15 8V2M18 8v5a6 6 0 0 1-12 0V8Z"></path></svg>
+                    )}
+                    <span class="nx-fade">{item.label}</span>
+                    {item.soon && <span class="nx-soon nx-fade">{t.nav.soon}</span>}
+                    {item.beta && <span class="nx-soon nx-soon--beta nx-fade" title={t.nav.betaTitle}>{t.nav.beta}</span>}
+                  </>
+                );
+                return item.soon ? (
+                  <span class="nx-nav__link nx-nav__link--soon" aria-disabled="true" title={`${item.label} · ${t.nav.soonTitle}`}>
+                    {inner}
+                  </span>
+                ) : (
+                  <a href={item.href} class="nx-nav__link" aria-current={item.active ? 'page' : undefined} title={item.label}>
+                    {inner}
+                  </a>
+                );
+              })}
+            </div>
+          ))}
+        </nav>
+        <div class="nx-sidebar__foot">
+          <span class="nx-locale">
+            {LOCALES.map((l, i) => (
+              <>
+                {i > 0 && <span aria-hidden="true"> / </span>}
+                {l === locale ? <strong>{l.toUpperCase()}</strong> : <a href={switcherHref(l)}>{l.toUpperCase()}</a>}
+              </>
+            ))}
+          </span>
+          <span>{t.nav.build(buildDate)}</span>
+          <span>{t.layout.footerCredit} <a class="nx-credit-link" href="https://neuland-bfi.de" target="_blank" rel="noopener noreferrer">neuland - Büro für Informatik</a></span>
+        </div>
+      </aside>
+      <div class="nx-backdrop" data-nx-backdrop></div>
+
+      <main class="nx-main">
+        <slot />
+      </main>
+    </div>
+
+    <script is:inline define:vars={{ navKey: NAV_STORAGE_KEY }}>
+      // Desktop: collapse the sidebar to an icon rail, remembered across pages.
+      const root = document.documentElement;
+      const collapseBtn = document.querySelector('[data-nx-collapse]');
+      const labels = { collapse: collapseBtn?.getAttribute('aria-label') ?? '', expand: collapseBtn?.dataset.expandLabel ?? '' };
+
+      function syncCollapse() {
+        const collapsed = root.classList.contains('nx-collapsed');
+        collapseBtn?.setAttribute('aria-expanded', String(!collapsed));
+        if (labels.expand) {
+          collapseBtn?.setAttribute('aria-label', collapsed ? labels.expand : labels.collapse);
+          collapseBtn?.setAttribute('title', collapsed ? labels.expand : labels.collapse);
+        }
+      }
+
+      collapseBtn?.addEventListener('click', () => {
+        const collapsed = root.classList.toggle('nx-collapsed');
+        try {
+          window.localStorage.setItem(navKey, collapsed ? 'collapsed' : 'expanded');
+        } catch (_e) {
+          // Storage unavailable: the state still applies to this page.
+        }
+        syncCollapse();
+      });
+      syncCollapse();
+
+      // Mobile drawer: open from the top bar, close via the X, the backdrop, Escape, or
+      // by following a link. Pure DOM, no state beyond the class on the shell.
+      const shell = document.querySelector('.nx-shell');
+      const openBtn = document.querySelector('[data-nx-menu]');
+      const closeBtn = document.querySelector('[data-nx-close]');
+      const backdrop = document.querySelector('[data-nx-backdrop]');
+      const sidebar = document.getElementById('nx-sidebar');
+
+      function setOpen(open) {
+        shell?.classList.toggle('nx-shell--open', open);
+        openBtn?.setAttribute('aria-expanded', String(open));
+        if (open) {
+          closeBtn?.focus();
+        } else {
+          openBtn?.focus();
+        }
+      }
+
+      openBtn?.addEventListener('click', () => setOpen(!shell?.classList.contains('nx-shell--open')));
+      closeBtn?.addEventListener('click', () => setOpen(false));
+      backdrop?.addEventListener('click', () => setOpen(false));
+      sidebar?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => shell?.classList.remove('nx-shell--open')));
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && shell?.classList.contains('nx-shell--open')) {
+          setOpen(false);
+        }
+      });
+    </script>
+  </body>
+</html>

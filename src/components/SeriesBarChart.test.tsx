@@ -87,6 +87,20 @@ describe('SeriesBarChart axis ticks', () => {
     expect(propsOf(tree(oneWeek, 'week'), XAxis)[0].interval).toBe(3);
   });
 
+  it('draws tick lines and shortens labels for weekly buckets only', () => {
+    // given
+    const dailyAxis = propsOf(tree(oneWeek, 'day'), XAxis)[0];
+
+    // when
+    const weeklyAxis = propsOf(tree(oneWeek, 'week'), XAxis)[0];
+
+    // then
+    expect(dailyAxis.tickLine).toBe(false);
+    expect(dailyAxis.tickFormatter).toBeUndefined();
+    expect(weeklyAxis.tickLine).not.toBe(false);
+    expect((weeklyAxis.tickFormatter as (v: string) => string)('KW29 2026')).toBe('KW29');
+  });
+
   it('scales the week tick interval with the bucket count on long ranges', () => {
     // given — 120 weekly buckets against a budget of 15 ticks
     const dates = Array.from({ length: 120 }, (_, i) => `2026-01-${String((i % 28) + 1).padStart(2, '0')}`);

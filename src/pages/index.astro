@@ -1,13 +1,13 @@
 ---
-import Layout from '~/layouts/Layout.astro';
-import Header from '~/components/Header.astro';
-import Dashboard from '~/components/Dashboard.tsx';
-import { DEFAULT_LOCALE, type Locale } from '~/i18n';
+import LayoutNext from '~/layouts/LayoutNext.astro';
+import DashboardNext from '~/components/next/DashboardNext.tsx';
+import { dict, DEFAULT_LOCALE, type Locale } from '~/i18n';
+import { COMPANY_NAME } from '~/lib/company';
 
 const locale = (Astro.currentLocale as Locale | undefined) ?? DEFAULT_LOCALE;
+const t = dict(locale);
 ---
 
-<Layout>
-  <Header faqAsterisk="claude" />
-  <Dashboard client:only="react" locale={locale} />
-</Layout>
+<LayoutNext>
+  <DashboardNext client:only="react" locale={locale} title={t.header.defaultTitle} lede={t.header.defaultLede(COMPANY_NAME)} />
+</LayoutNext>

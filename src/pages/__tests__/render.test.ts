@@ -7,7 +7,7 @@
 //     instanceof Uint8Array`. Under jsdom that is false, so this file must run in the
 //     node environment while the rest of the suite stays on jsdom.
 //   * The React renderer has to be registered explicitly. Without it any page holding a
-//     React component — including `FaqAsterisk` inside `Header` — throws NoMatchingRenderer.
+//     React component — including the sidebar's provider glyphs — throws NoMatchingRenderer.
 //
 // What the container cannot do: `Astro.currentLocale` is a product of i18n *routing*,
 // which the container does not apply. Every page here therefore falls back to
@@ -21,6 +21,7 @@ import DeIndex from '~/pages/index.astro';
 import EnIndex from '~/pages/en/index.astro';
 import DeProvider from '~/pages/provider/[provider].astro';
 import EnProvider from '~/pages/en/provider/[provider].astro';
+import DeFaq from '~/pages/faq.astro';
 import { COMPANY_NAME } from '~/lib/company';
 import { DEFAULT_LOCALE, dict } from '~/i18n';
 import { PROVIDER_LABELS } from '~/lib/types';
@@ -40,24 +41,81 @@ function title(html: string): string | undefined {
   return html.match(/<title>([^<]*)<\/title>/)?.[1];
 }
 
+/** The page's own island is the `client:only` one; the sidebar's provider items hydrate with `client:load`. */
+function pageIsland(html: string): string {
+  return [...html.matchAll(/<astro-island[^>]*>/g)].map((m) => m[0]).find((tag) => /\sclient="only"/.test(tag)) ?? '';
+}
+
 /**
- * The props Astro hands to a client island, decoded from the `<astro-island>` element.
+ * The props Astro hands to the page island, decoded from the `<astro-island>` element.
  * Astro serialises each value as `[typeTag, value]`; only the value matters here.
  */
 function islandProps(html: string): Record<string, unknown> {
-  const raw = html.match(/<astro-island[^>]*\sprops="([^"]*)"/)?.[1] ?? '{}';
+  const raw = pageIsland(html).match(/\sprops="([^"]*)"/)?.[1] ?? '{}';
   const parsed = JSON.parse(raw.replace(/&quot;/g, '"')) as Record<string, [number, unknown]>;
   return Object.fromEntries(Object.entries(parsed).map(([k, [, value]]) => [k, value]));
 }
 
-function island(html: string): { url?: string; export?: string; client?: string } {
-  const tag = html.match(/<astro-island[^>]*>/)?.[0] ?? '';
-  return {
-    url: tag.match(/component-url="([^"]*)"/)?.[1],
-    export: tag.match(/component-export="([^"]*)"/)?.[1],
-    client: tag.match(/\sclient="([^"]*)"/)?.[1],
-  };
+function islandUrl(html: string): string | undefined {
+  return pageIsland(html).match(/component-url="([^"]*)"/)?.[1];
 }
+
+function activeNav(html: string): string[] {
+  return [...html.matchAll(/<a href="([^"]+)" class="nx-nav__link" aria-current="page"/g)].map((m) => m[1]);
+}
+
+describe('index page', () => {
+  it('mounts the dashboard with the locale, title and lede', async () => {
+    // given
+    const c = await container();
+
+    // when
+    const html = await c.renderToString(DeIndex, { request: new Request('http://localhost/') });
+
+    // then
+    expect(islandProps(html)).toEqual({
+      locale: DEFAULT_LOCALE,
+      title: t.header.defaultTitle,
+      lede: t.header.defaultLede(COMPANY_NAME),
+    });
+    expect(islandUrl(html)).toContain('DashboardNext');
+  });
+
+  it('marks the company-wide item active in the sidebar, and only that one', async () => {
+    // given
+    const c = await container();
+
+    // when
+    const html = await c.renderToString(DeIndex, { request: new Request('http://localhost/') });
+
+    // then
+    expect(activeNav(html)).toEqual(['/']);
+  });
+
+  it('carries no design switch any more', async () => {
+    // given
+    const c = await container();
+
+    // when
+    const html = await c.renderToString(DeIndex, { request: new Request('http://localhost/') });
+
+    // then
+    expect(html).not.toContain('design-toggle');
+    expect(html).not.toContain('tokendashboard.design');
+  });
+
+  it('exists in both locales and mounts the same island', async () => {
+    // given
+    const c = await container();
+
+    // when
+    const de = await c.renderToString(DeIndex, { request: new Request('http://localhost/') });
+    const en = await c.renderToString(EnIndex, { request: new Request('http://localhost/en/') });
+
+    // then
+    expect(islandUrl(en)).toBe(islandUrl(de));
+  });
+});
 
 describe('provider page', () => {
   it('titles the page with the provider label and the company name', async () => {
@@ -75,55 +133,7 @@ describe('provider page', () => {
     expect(title(html)).toBe(t.providerPage.title(PROVIDER_LABELS[DEFAULT_LOCALE].copilot, COMPANY_NAME));
   });
 
-  it('hands the provider to the island, which is where the page stops and React starts', async () => {
-    // given
-    const c = await container();
-
-    // when
-    const html = await c.renderToString(DeProvider, {
-      props: { provider: 'opencode' },
-      params: { provider: 'opencode' },
-      request: new Request('http://localhost/provider/opencode/'),
-    });
-
-    // then
-    expect(islandProps(html)).toEqual({ provider: 'opencode', locale: DEFAULT_LOCALE });
-  });
-
-  it('defers the island until the browser, since it needs the API', async () => {
-    // given
-    const c = await container();
-
-    // when
-    const html = await c.renderToString(DeProvider, {
-      props: { provider: 'claude' },
-      params: { provider: 'claude' },
-      request: new Request('http://localhost/provider/claude/'),
-    });
-
-    // then
-    expect(island(html)).toMatchObject({ export: 'default', client: 'only' });
-    expect(island(html).url).toContain('ProviderDetail');
-  });
-
-  it('shows the provider name as the heading, with the detail lede', async () => {
-    // given
-    const c = await container();
-
-    // when
-    const html = await c.renderToString(DeProvider, {
-      props: { provider: 'claude' },
-      params: { provider: 'claude' },
-      request: new Request('http://localhost/provider/claude/'),
-    });
-
-    // then
-    expect(html).toContain('<h1 class="ds-h1"');
-    expect(html).toContain(PROVIDER_LABELS[DEFAULT_LOCALE].claude);
-    expect(html).toContain(t.providerDetail.lede);
-  });
-
-  it('marks the visited provider active in the navigation, and only that one', async () => {
+  it('hands provider, locale, title and lede to the island', async () => {
     // given
     const c = await container();
 
@@ -135,8 +145,28 @@ describe('provider page', () => {
     });
 
     // then
-    const active = [...html.matchAll(/<a href="([^"]+)" class="nav-link active"/g)].map((m) => m[1]);
-    expect(active).toEqual(['/provider/copilot/']);
+    expect(islandProps(html)).toEqual({
+      provider: 'copilot',
+      locale: DEFAULT_LOCALE,
+      title: PROVIDER_LABELS[DEFAULT_LOCALE].copilot,
+      lede: t.providerDetail.lede,
+    });
+    expect(islandUrl(html)).toContain('ProviderDetailNext');
+  });
+
+  it('marks the visited provider active in the sidebar', async () => {
+    // given
+    const c = await container();
+
+    // when
+    const html = await c.renderToString(DeProvider, {
+      props: { provider: 'copilot' },
+      params: { provider: 'copilot' },
+      request: new Request('http://localhost/provider/copilot/'),
+    });
+
+    // then
+    expect(activeNav(html)).toEqual(['/provider/copilot/']);
   });
 
   it('titles the English tree without the German hyphenation', async () => {
@@ -155,8 +185,8 @@ describe('provider page', () => {
   });
 });
 
-describe('index page', () => {
-  it('mounts the dashboard island with just the locale', async () => {
+describe('sidebar', () => {
+  it('holds only the released areas: no projects, experiments or "this machine", which are built on dev', async () => {
     // given
     const c = await container();
 
@@ -164,11 +194,14 @@ describe('index page', () => {
     const html = await c.renderToString(DeIndex, { request: new Request('http://localhost/') });
 
     // then
-    expect(islandProps(html)).toEqual({ locale: DEFAULT_LOCALE });
-    expect(island(html).url).toContain('Dashboard');
+    expect(html).not.toContain('href="/projects/"');
+    expect(html).not.toContain('href="/local/"');
+    expect(html).not.toContain('nx-nav__link--soon');
+    expect(html).not.toContain('nx-soon--beta');
+    expect(html).not.toContain('data-nx-favorites');
   });
 
-  it('marks the overview active in the navigation', async () => {
+  it('offers the collapse button, remembered under the nav storage key', async () => {
     // given
     const c = await container();
 
@@ -176,23 +209,39 @@ describe('index page', () => {
     const html = await c.renderToString(DeIndex, { request: new Request('http://localhost/') });
 
     // then
-    const active = [...html.matchAll(/<a href="([^"]+)" class="nav-link active"/g)].map((m) => m[1]);
-    expect(active).toEqual(['/']);
-  });
-
-  it('exists in both trees and mounts the same island', async () => {
-    // given
-    const c = await container();
-
-    // when
-    const de = await c.renderToString(DeIndex, { request: new Request('http://localhost/') });
-    const en = await c.renderToString(EnIndex, { request: new Request('http://localhost/en/') });
-
-    // then
-    expect(island(en).url).toBe(island(de).url);
+    expect(html).toContain('data-nx-collapse');
+    expect(html).toContain('tokendashboard.nav');
   });
 });
 
+describe('FAQ page', () => {
+  it('mounts the shared FAQ content, anchors included', async () => {
+    // given
+    const c = await container();
+
+    // when
+    const html = await c.renderToString(DeFaq, { request: new Request('http://localhost/faq/') });
+
+    // then
+    expect(html).toContain(`id="${t.faqAsterisk.co2.id}"`);
+    expect(html).toContain('class="nx-faq"');
+  });
+
+  it('answers "Plugins installieren" from the sidebar with every provider, not Claude alone', async () => {
+    // given
+    const c = await container();
+
+    // when
+    const html = await c.renderToString(DeFaq, { request: new Request('http://localhost/faq/') });
+
+    // then
+    expect(html).toMatch(new RegExp(`<a href="/faq/#plugins" class="nx-nav__link"[^>]*title="${t.nav.installPlugins}"`));
+    const entry = html.slice(html.indexOf('<section id="plugins"'), html.indexOf('</section>', html.indexOf('<section id="plugins"')));
+    expect(entry).toContain('href="#plugin-installation"');
+    expect(entry).toContain('href="#plugin-installation-copilot"');
+    expect(entry).toContain('href="#plugin-installation-opencode"');
+  });
+});
 describe('every page head', () => {
   it('mirrors the title into the Open Graph and Twitter cards', async () => {
     // given

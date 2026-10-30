@@ -23,3 +23,8 @@ export const fetchProviderUsage = vi.fn<Api['fetchProviderUsage']>();
 export const fetchUsageOverview = vi.fn<Api['fetchUsageOverview']>();
 export const fetchProviderUsageSeries = vi.fn<Api['fetchProviderUsageSeries']>();
 export const fetchAllUsageSeries = vi.fn<Api['fetchAllUsageSeries']>();
+
+// Any client — the backend's or a local one — is the same four stubs, so a test controls
+// every base URL through them.
+export const backendApi: Api['backendApi'] = { fetchProviderUsage, fetchUsageOverview, fetchProviderUsageSeries, fetchAllUsageSeries };
+export const createApi = vi.fn<Api['createApi']>(() => backendApi);

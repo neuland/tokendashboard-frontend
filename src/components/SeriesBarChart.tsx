@@ -4,12 +4,12 @@ import type { ProviderUsageSeries, SeriesGranularity } from '~/lib/types';
 import { formatNumber, formatTokens, formatCo2, formatUsd } from '~/lib/format';
 import { isWeekend } from '~/lib/range';
 import type { ChartRow, View } from '~/lib/seriesChartData';
-import { axisLabel } from '~/lib/seriesChartData';
+import { axisLabel, weekTickLabels } from '~/lib/seriesChartData';
 import { dict, type Locale } from '~/i18n';
 
 const WEEKEND_COLOR = '#FF9A3C';
 
-// Week labels ("KW23 2026") are wide, so on long ranges the tick interval scales with
+// Only every few weeks gets a label, so on long ranges the tick interval scales with
 // the bucket count to keep at most this many on the axis.
 const MAX_WEEK_TICKS = 15;
 
@@ -30,6 +30,9 @@ interface Props {
 export default function SeriesBarChart({ chartData, series, granularity, view, children, locale }: Props): JSX.Element {
   const t = dict(locale);
   const weekTickInterval = Math.max(3, Math.ceil(series.buckets.length / MAX_WEEK_TICKS) - 1);
+  // Short week labels plus a tick line pin each label to its bar; otherwise a label under
+  // an empty week reads as belonging to the bar beside it.
+  const weekTicks = granularity === 'week' ? weekTickLabels(series.buckets, weekTickInterval, locale) : undefined;
   // Shading Sat/Sun makes the weekly rhythm legible; pointless for week buckets, which
   // span whole calendar weeks anyway.
   const weekendLabels =
@@ -57,8 +60,9 @@ export default function SeriesBarChart({ chartData, series, granularity, view, c
             <XAxis
               dataKey="date"
               interval={granularity === 'week' ? weekTickInterval : 'preserveStartEnd'}
+              tickFormatter={weekTicks ? (v: string) => weekTicks.get(v) ?? v : undefined}
               tick={{ fontSize: 12, fill: '#666666', fontFamily: 'DM Sans, sans-serif' }}
-              tickLine={false}
+              tickLine={weekTicks ? { stroke: '#C5BDB6' } : false}
               axisLine={{ stroke: '#C5BDB6' }}
             />
             <YAxis

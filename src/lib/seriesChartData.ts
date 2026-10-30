@@ -4,7 +4,7 @@
 
 import type { Provider, ProviderBucketStats, ProviderUsageSeries, SeriesBucket, SeriesGranularity } from './types';
 import { TOKEN_TYPES, usdCentToUsd } from './types';
-import { formatDateRange, formatDayShort, formatWeekLabel } from './format';
+import { formatDateRange, formatDayShort, formatWeekLabel, formatWeekShort, isoWeekInfo } from './format';
 import { dict, type Locale } from '~/i18n';
 
 export type View = 'tokenType' | 'tokenTypeAll' | 'model' | 'co2' | 'cost' | 'installations' | 'tokensPerInstallation';
@@ -26,6 +26,28 @@ const EMPTY_PROVIDER_STATS: ProviderBucketStats = {
 // `fullLabel`, which the tooltip shows instead.
 export function axisLabel(b: SeriesBucket, granularity: SeriesGranularity, locale: Locale): string {
   return granularity === 'week' ? formatWeekLabel(b.date, locale) : formatDayShort(b.date, locale);
+}
+
+/**
+ * Tick text for weekly buckets, keyed by the row's `date`. The axis category keeps the
+ * full `KW41 2026`, so two years' KW1 never collapse into one; the tick shows `KW41`
+ * alone, about one bar wide, so it cannot be read as belonging to the neighbouring bar.
+ * The year comes back only on the first shown tick of a new ISO year. `interval` is the
+ * one handed to the XAxis: recharts shows every `interval + 1`-th tick from the first.
+ */
+export function weekTickLabels(buckets: SeriesBucket[], interval: number, locale: Locale): Map<string, string> {
+  const labels = new Map<string, string>();
+  let shownYear: number | undefined;
+  buckets.forEach((b, i) => {
+    const { year } = isoWeekInfo(b.date);
+    const shown = i % (interval + 1) === 0;
+    const yearChanged = shown && shownYear !== undefined && year !== shownYear;
+    labels.set(formatWeekLabel(b.date, locale), yearChanged ? formatWeekLabel(b.date, locale) : formatWeekShort(b.date, locale));
+    if (shown) {
+      shownYear = year;
+    }
+  });
+  return labels;
 }
 
 function baseRow(b: SeriesBucket, granularity: SeriesGranularity, locale: Locale): ChartRow {
