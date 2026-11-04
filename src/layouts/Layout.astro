@@ -1,9 +1,12 @@
 ---
+// The app shell: a grouped sidebar (overview / providers / help) on the left, the page content on the right. The sidebar stays put
+// while the page scrolls and collapses to an icon rail; below 900px it becomes a
+// drawer behind a menu button in a top bar.
 import '~/styles/global.css';
-import DecoBars from '~/components/DecoBars.astro';
+import '~/styles/app.css';
 import { getRelativeLocaleUrl } from 'astro:i18n';
-import { PROVIDER_SHORT_LABELS } from '~/lib/types';
-import type { Provider } from '~/lib/types';
+import { PROVIDERS, PROVIDER_SHORT_LABELS, PROVIDER_COLORS } from '~/lib/types';
+import { PROVIDER_ICON_PATHS } from '~/lib/providerIcons';
 import { dict, DEFAULT_LOCALE, LOCALES, type Locale } from '~/i18n';
 import { formatDate } from '~/lib/format';
 import { COMPANY_NAME } from '~/lib/company';
@@ -16,36 +19,73 @@ const t = dict(locale);
 
 const { title = t.layout.title(COMPANY_NAME) } = Astro.props;
 const base = import.meta.env.BASE_URL; // has a trailing slash
-
 const description = t.layout.description(COMPANY_NAME);
 
-const providerNav = (p: Provider) => ({
-  href: getRelativeLocaleUrl(locale, `provider/${p}/`),
-  label: PROVIDER_SHORT_LABELS[locale][p],
-});
+/** localStorage key remembering a collapsed sidebar; read before paint, see <head>. */
+const NAV_STORAGE_KEY = 'tokendashboard.nav';
 
-const navItems = [
-  { href: getRelativeLocaleUrl(locale, ''), label: t.nav.overview },
-  providerNav('claude'),
-  providerNav('copilot'),
-  providerNav('opencode'),
-  { href: getRelativeLocaleUrl(locale, 'faq/'), label: t.nav.faq },
-];
+const pageUrl = (rest = ''): string => getRelativeLocaleUrl(locale, rest);
 
 // Compare paths trailing-slash-insensitively to mark the current nav item.
-const normalize = (p: string) => (p.endsWith('/') ? p : `${p}/`);
+const normalize = (p: string): string => (p.endsWith('/') ? p : `${p}/`);
 const current = normalize(Astro.url.pathname);
-const isActive = (href: string) => normalize(href) === current;
+const isActive = (href: string): boolean => normalize(href) === current;
+
+type Icon = 'grid' | 'help' | 'leaf' | 'plug';
+interface NavItem {
+  href?: string;
+  label: string;
+  icon?: Icon;
+  /** A provider logo, drawn in `color`. */
+  glyph?: string;
+  color?: string;
+  active: boolean;
+  /** Teased only: rendered without a link, marked "soon". */
+  soon?: boolean;
+  /** Built, but still marked "beta" next to the label. */
+  beta?: boolean;
+}
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
+const faqUrl = pageUrl('faq/');
+const groups: NavGroup[] = [
+  {
+    label: t.nav.groupOverview,
+    items: [{ href: pageUrl(), label: t.nav.companyWide, icon: 'grid', active: isActive(pageUrl()) }],
+  },
+  {
+    label: t.nav.groupProviders,
+    items: PROVIDERS.map((p) => {
+      const href = pageUrl(`provider/${p}/`);
+      return { href, label: PROVIDER_SHORT_LABELS[locale][p], glyph: PROVIDER_ICON_PATHS[p], color: PROVIDER_COLORS[p], active: isActive(href) };
+    }),
+  },
+  {
+    label: t.nav.groupHelp,
+    items: [
+      { href: faqUrl, label: t.nav.faq, icon: 'help', active: isActive(faqUrl) },
+      { href: `${faqUrl}#${t.faqAsterisk.co2.id}`, label: t.nav.co2Method, icon: 'leaf', active: false },
+      { href: `${faqUrl}#plugins`, label: t.nav.installPlugins, icon: 'plug', active: false },
+    ],
+  },
+];
 
 // Strip the current locale prefix so the switcher can rebuild the path in the other locale.
 const pathWithoutLocale = Astro.url.pathname.replace(new RegExp(`^${base}(en/)?`), '');
-const switcherHref = (l: Locale) => getRelativeLocaleUrl(l, pathWithoutLocale);
+const switcherHref = (l: Locale): string => getRelativeLocaleUrl(l, pathWithoutLocale);
 
 // Static build: evaluated once at build time, so this dates the deployment, not the visit.
+const now = new Date();
 const buildDate = formatDate(
-  `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`,
+  `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`,
   locale,
 );
+
+const brandMark =
+  'M70.29,75.2h15.8v-28.87h-15.8v-11.58C70.29,15.55,54.55,0,35.14,0S0,15.55,0,34.74v40.46h30.88v-42.53c0-2.33,1.91-4.21,4.26-4.21s4.26,1.88,4.26,4.21v42.53h30.88Z';
 ---
 
 <!doctype html>
@@ -55,6 +95,16 @@ const buildDate = formatDate(
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <title>{title}</title>
+    <script is:inline define:vars={{ navKey: NAV_STORAGE_KEY }}>
+      // Collapsed sidebar: applied before paint so the rail never jumps on load.
+      try {
+        if (window.localStorage.getItem(navKey) === 'collapsed') {
+          document.documentElement.classList.add('app-collapsed');
+        }
+      } catch (_e) {
+        // Storage unavailable: start expanded.
+      }
+    </script>
 
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
@@ -68,171 +118,147 @@ const buildDate = formatDate(
     <meta name="twitter:description" content={description} />
     <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
   </head>
-  <body>
-    <header class="site-header">
-      <div class="container header-inner">
-        <a href={getRelativeLocaleUrl(locale, '')} class="brand" aria-label={t.layout.homeAriaLabel}>
-          <svg class="brand-mark" viewBox="0 0 86 76" aria-hidden="true">
-            <path
-              fill="currentColor"
-              d="M70.29,75.2h15.8v-28.87h-15.8v-11.58C70.29,15.55,54.55,0,35.14,0S0,15.55,0,34.74v40.46h30.88v-42.53c0-2.33,1.91-4.21,4.26-4.21s4.26,1.88,4.26,4.21v42.53h30.88Z"
-            ></path>
-          </svg>
-          <span class="brand-text">{COMPANY_NAME} <span class="brand-sub">{t.layout.brandSub}</span></span>
+  <body class="app">
+    <div class="app-shell">
+      <header class="app-topbar">
+        <a href={pageUrl()} class="app-brand" aria-label={t.layout.homeAriaLabel}>
+          <svg class="app-brand__mark" viewBox="0 0 86 76" aria-hidden="true"><path fill="currentColor" d={brandMark}></path></svg>
+          <span class="app-brand__text">{COMPANY_NAME || 'neuland'}<span class="app-brand__sub">{t.layout.brandSub}</span></span>
         </a>
-        <nav aria-label={t.layout.navAriaLabel}>
-          <ul class="nav-list">
-            {
-              navItems.map((item) => (
-                <li>
-                  <a href={item.href} class:list={['nav-link', { active: isActive(item.href) }]}>
-                    {item.label}
+        <button type="button" class="app-menu-btn" aria-label={t.nav.menuOpen} aria-controls="app-sidebar" aria-expanded="false" data-app-menu>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+        </button>
+      </header>
+
+      <aside class="app-sidebar" id="app-sidebar">
+        <div class="app-sidebar__close">
+          <span class="app-eyebrow">{t.layout.navAriaLabel}</span>
+          <button type="button" class="app-menu-btn" aria-label={t.nav.menuClose} data-app-close>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+          </button>
+        </div>
+        <a href={pageUrl()} class="app-brand" aria-label={t.layout.homeAriaLabel}>
+          <svg class="app-brand__mark" viewBox="0 0 86 76" aria-hidden="true"><path fill="currentColor" d={brandMark}></path></svg>
+          <span class="app-brand__text app-fade">{COMPANY_NAME || 'neuland'}<span class="app-brand__sub">{t.layout.brandSub}</span></span>
+        </a>
+        <div class="app-sidebar__toggle">
+          <button type="button" class="app-collapse-btn" aria-label={t.nav.collapse} title={t.nav.collapse} data-expand-label={t.nav.expand} aria-expanded="true" aria-controls="app-sidebar" data-app-collapse>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+          </button>
+        </div>
+        <nav class="app-nav" aria-label={t.layout.navAriaLabel}>
+          {groups.map((g) => (
+            <div class="app-nav__group">
+              {g.items.length > 1 && <span class="app-eyebrow app-nav__label app-fade">{g.label}</span>}
+              {g.items.map((item) => {
+                const inner = (
+                  <>
+                    {item.glyph && (
+                      <svg class="app-glyph" width="16" height="16" viewBox="0 0 24 24" fill={item.color} aria-hidden="true"><path d={item.glyph}></path></svg>
+                    )}
+                    {item.icon === 'grid' && (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
+                    )}
+                    {item.icon === 'help' && (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"></path></svg>
+                    )}
+                    {item.icon === 'leaf' && (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path><path d="M2 21c0-3 1.85-5.36 5.08-6"></path></svg>
+                    )}
+                    {item.icon === 'plug' && (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22v-5M9 8V2M15 8V2M18 8v5a6 6 0 0 1-12 0V8Z"></path></svg>
+                    )}
+                    <span class="app-fade">{item.label}</span>
+                    {item.soon && <span class="app-soon app-fade">{t.nav.soon}</span>}
+                    {item.beta && <span class="app-soon app-soon--beta app-fade" title={t.nav.betaTitle}>{t.nav.beta}</span>}
+                  </>
+                );
+                return item.soon ? (
+                  <span class="app-nav__link app-nav__link--soon" aria-disabled="true" title={`${item.label} · ${t.nav.soonTitle}`}>
+                    {inner}
+                  </span>
+                ) : (
+                  <a href={item.href} class="app-nav__link" aria-current={item.active ? 'page' : undefined} title={item.label}>
+                    {inner}
                   </a>
-                </li>
-              ))
-            }
-            <li class="locale-switcher">
-              {LOCALES.map((l, i) => (
-                <>
-                  {i > 0 && <span aria-hidden="true"> / </span>}
-                  {l === locale ? (
-                    <span class="locale-link locale-link--active">{l.toUpperCase()}</span>
-                  ) : (
-                    <a class="locale-link" href={switcherHref(l)}>{l.toUpperCase()}</a>
-                  )}
-                </>
-              ))}
-            </li>
-          </ul>
+                );
+              })}
+            </div>
+          ))}
         </nav>
-      </div>
-    </header>
+        <div class="app-sidebar__foot">
+          <span class="app-locale">
+            {LOCALES.map((l, i) => (
+              <>
+                {i > 0 && <span aria-hidden="true"> / </span>}
+                {l === locale ? <strong>{l.toUpperCase()}</strong> : <a href={switcherHref(l)}>{l.toUpperCase()}</a>}
+              </>
+            ))}
+          </span>
+          <span>{t.nav.build(buildDate)}</span>
+          <span>{t.layout.footerCredit} <a class="app-credit-link" href="https://neuland-bfi.de" target="_blank" rel="noopener noreferrer">neuland - Büro für Informatik</a></span>
+        </div>
+      </aside>
+      <div class="app-backdrop" data-app-backdrop></div>
 
-    <main class="app">
-      <slot />
-    </main>
+      <main class="app-main">
+        <slot />
+      </main>
+    </div>
 
-    <DecoBars />
+    <script is:inline define:vars={{ navKey: NAV_STORAGE_KEY }}>
+      // Desktop: collapse the sidebar to an icon rail, remembered across pages.
+      const root = document.documentElement;
+      const collapseBtn = document.querySelector('[data-app-collapse]');
+      const labels = { collapse: collapseBtn?.getAttribute('aria-label') ?? '', expand: collapseBtn?.dataset.expandLabel ?? '' };
 
-    <footer class="site-footer">
-      <div class="container footer-inner">
-        <span class="footer-meta">
-          {t.layout.footerProject(buildDate)}
-          <a class="footer-link" href={getRelativeLocaleUrl(locale, 'faq/')}>{t.nav.faq}</a>
-        </span>
-        <span class="footer-meta">{t.layout.footerCredit}</span>
-      </div>
-    </footer>
+      function syncCollapse() {
+        const collapsed = root.classList.contains('app-collapsed');
+        collapseBtn?.setAttribute('aria-expanded', String(!collapsed));
+        if (labels.expand) {
+          collapseBtn?.setAttribute('aria-label', collapsed ? labels.expand : labels.collapse);
+          collapseBtn?.setAttribute('title', collapsed ? labels.expand : labels.collapse);
+        }
+      }
+
+      collapseBtn?.addEventListener('click', () => {
+        const collapsed = root.classList.toggle('app-collapsed');
+        try {
+          window.localStorage.setItem(navKey, collapsed ? 'collapsed' : 'expanded');
+        } catch (_e) {
+          // Storage unavailable: the state still applies to this page.
+        }
+        syncCollapse();
+      });
+      syncCollapse();
+
+      // Mobile drawer: open from the top bar, close via the X, the backdrop, Escape, or
+      // by following a link. Pure DOM, no state beyond the class on the shell.
+      const shell = document.querySelector('.app-shell');
+      const openBtn = document.querySelector('[data-app-menu]');
+      const closeBtn = document.querySelector('[data-app-close]');
+      const backdrop = document.querySelector('[data-app-backdrop]');
+      const sidebar = document.getElementById('app-sidebar');
+
+      function setOpen(open) {
+        shell?.classList.toggle('app-shell--open', open);
+        openBtn?.setAttribute('aria-expanded', String(open));
+        if (open) {
+          closeBtn?.focus();
+        } else {
+          openBtn?.focus();
+        }
+      }
+
+      openBtn?.addEventListener('click', () => setOpen(!shell?.classList.contains('app-shell--open')));
+      closeBtn?.addEventListener('click', () => setOpen(false));
+      backdrop?.addEventListener('click', () => setOpen(false));
+      sidebar?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => shell?.classList.remove('app-shell--open')));
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && shell?.classList.contains('app-shell--open')) {
+          setOpen(false);
+        }
+      });
+    </script>
   </body>
 </html>
-
-<style>
-  .site-header {
-    background: var(--bg-1);
-    border-bottom: 1px solid var(--neuland-light-grey);
-  }
-  .header-inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-sm);
-    flex-wrap: wrap;
-    padding-top: 14px;
-    padding-bottom: 14px;
-  }
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    text-decoration: none;
-    color: var(--fg-1);
-  }
-  .brand:hover { opacity: 1; }
-  .brand-mark {
-    width: 26px;
-    height: 23px;
-    color: var(--neuland-primary);
-    flex-shrink: 0;
-  }
-  .brand-text {
-    font-weight: var(--fw-semibold);
-    font-size: var(--t-body);
-    white-space: nowrap;
-  }
-  .brand-sub {
-    font-weight: var(--fw-book);
-    color: var(--fg-3);
-  }
-  .nav-list {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    flex-wrap: wrap;
-  }
-  .nav-list li { margin: 0; }
-  .nav-link {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 6px;
-    text-decoration: none;
-    border-bottom: 2px solid transparent;
-    color: var(--fg-2);
-    padding-bottom: 2px;
-    font-size: var(--t-small);
-    transition: border-color var(--ease-fast);
-  }
-  .nav-link:hover {
-    opacity: 1;
-    border-bottom-color: var(--neuland-primary-light);
-  }
-  .nav-link.active {
-    border-bottom-color: var(--neuland-primary);
-    color: var(--fg-1);
-  }
-  .locale-switcher {
-    font-size: var(--t-small);
-    color: var(--fg-3);
-  }
-  .locale-link {
-    color: var(--fg-2);
-    text-decoration: none;
-  }
-  .locale-link:hover {
-    opacity: 1;
-    color: var(--fg-1);
-  }
-  .locale-link--active {
-    color: var(--fg-1);
-    font-weight: var(--fw-semibold);
-  }
-
-  .site-footer {
-    background: var(--bg-1);
-    border-top: 1px solid var(--neuland-light-grey);
-  }
-  .footer-inner {
-    display: flex;
-    justify-content: space-between;
-    gap: var(--space-sm);
-    flex-wrap: wrap;
-    padding-top: var(--space-sm);
-    padding-bottom: var(--space-sm);
-  }
-  .footer-meta {
-    font-size: var(--t-micro);
-    color: var(--neuland-primary);
-    letter-spacing: 0.02em;
-  }
-  .footer-link {
-    text-decoration: none;
-    border-bottom: 1px solid transparent;
-    transition: border-color var(--ease-fast);
-  }
-  .footer-link:hover {
-    opacity: 1;
-    border-bottom-color: var(--neuland-primary);
-  }
-</style>

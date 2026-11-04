@@ -5,6 +5,7 @@ import {
   buildProviderChartData,
   sortedModelFamilies,
   viewTitle,
+  weekTickLabels,
   type View,
 } from './seriesChartData';
 import type {
@@ -80,6 +81,33 @@ describe('axisLabel', () => {
   it('uses the ISO week label for weekly buckets', () => {
     // given / when / then
     expect(axisLabel(bucket({ date: '2026-07-22' }), 'week', 'de')).toBe(formatWeekLabel('2026-07-22', 'de'));
+  });
+});
+
+describe('weekTickLabels', () => {
+  it('keys by the full week label and shows the week alone', () => {
+    // given
+    const buckets = [bucket({ date: '2026-09-28' }), bucket({ date: '2026-10-05' })];
+
+    // when
+    const labels = weekTickLabels(buckets, 3, 'de');
+
+    // then
+    expect([...labels]).toEqual([
+      ['KW40 2026', 'KW40'],
+      ['KW41 2026', 'KW41'],
+    ]);
+  });
+
+  it('brings the year back on the first shown tick of a new ISO year', () => {
+    // given — weekly from KW49 2026; interval 1 shows every second week
+    const dates = ['2026-11-30', '2026-12-07', '2026-12-14', '2026-12-21', '2026-12-28', '2027-01-04', '2027-01-11'];
+
+    // when
+    const labels = weekTickLabels(dates.map((date) => bucket({ date })), 1, 'de');
+
+    // then — shown are KW49, KW51, KW53 and KW2; KW1 is hidden, so the year returns on KW2
+    expect([...labels.values()]).toEqual(['KW49', 'KW50', 'KW51', 'KW52', 'KW53', 'KW1', 'KW2 2027']);
   });
 });
 

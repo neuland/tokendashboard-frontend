@@ -1,36 +1,55 @@
 import { useEffect, useMemo, useState, type JSX } from 'react';
-import { AlertTriangle } from 'lucide-react';
 import type { Provider, UsageOverview } from '~/lib/types';
 import type { RangeSelection } from '~/lib/range';
-import { loadSelection, persistSelection, resolveRange } from '~/lib/range';
+import { loadSelection, persistSelection, rangeDays, resolveRange } from '~/lib/range';
 import { loadProviderSelection, persistProviderSelection } from '~/lib/providerSelection';
 import { ACTIVE_PROVIDERS, fetchUsageOverview } from '~/lib/api';
+import { useUsageSeries } from '~/lib/useUsageSeries';
+import type { View } from '~/lib/seriesChartData';
+import { buildHomeChartData } from '~/lib/seriesChartData';
 import { dict, type Locale } from '~/i18n';
-import { errorDetail } from '~/lib/errors';
 import DateRangePicker from './DateRangePicker';
-import KpiCards from './KpiCards';
-import ProviderComparison from './ProviderComparison';
+import ProviderFilter from './ProviderFilter';
+import ViewToggle from './ViewToggle';
+import ChartStatus from './ChartStatus';
 import EmptyRangeNotice from './EmptyRangeNotice';
-import HomeUsageSeriesChart from './HomeUsageSeriesChart';
+import SeriesBarChart from './SeriesBarChart';
+import { renderHomeUsageBars } from './HomeUsageBars';
+import PageBar from './PageBar';
+import ResolutionToggle, { canSwitchResolution } from './ResolutionToggle';
+import SectionCard from './SectionCard';
+import CacheBadge from './CacheBadge';
+import KpiList from './KpiList';
+import ProviderTable from './ProviderTable';
+
+const VIEWS: View[] = ['tokenType', 'tokenTypeAll', 'co2', 'cost', 'installations'];
 
 type State =
   | { status: 'loading' }
   | { status: 'error'; error: unknown }
   | { status: 'ready'; data: UsageOverview };
 
-export default function Dashboard({ locale }: { locale: Locale }): JSX.Element {
+interface Props {
+  locale: Locale;
+  title: string;
+  lede: string;
+}
+
+/**
+ * Home page: the key figures as a band under the page bar, then the history and the
+ * provider table at full width.
+ */
+export default function Dashboard({ locale, title, lede }: Props): JSX.Element {
   const t = dict(locale);
   const [selection, setSelection] = useState<RangeSelection>(() => loadSelection());
   const [selectedProviders, setSelectedProviders] = useState<Provider[]>(() => loadProviderSelection());
-  // Memoised so this component's fetch effect and the chart's own hook both see a
-  // stable object. A preset therefore stays pinned to the day it was resolved on.
+  const [view, setView] = useState<View>('tokenType');
+  // Memoised so the fetch effect and the series hook both see a stable object.
   const range = useMemo(() => resolveRange(selection), [selection]);
   const rangeKey = `${range.from}|${range.to}`;
-  // Which range the settled result belongs to. `loading` is derived from a stale key
-  // instead of set inside the effect, so a new range renders as loading in the same
-  // pass rather than one render later.
   const [settled, setSettled] = useState<{ key: string; state: State } | null>(null);
   const state: State = settled && settled.key === rangeKey ? settled.state : { status: 'loading' };
+  const series = useUsageSeries(range, undefined, selectedProviders);
 
   useEffect(() => {
     persistSelection(selection);
@@ -49,70 +68,97 @@ export default function Dashboard({ locale }: { locale: Locale }): JSX.Element {
         }
       })
       .catch((err: unknown) => {
-        if (!active) {
-          return;
+        if (active) {
+          setSettled({ key: rangeKey, state: { status: 'error', error: err } });
         }
-        setSettled({
-          key: rangeKey,
-          state: {
-            status: 'error',
-            error: err,
-          },
-        });
       });
     return () => {
       active = false;
     };
   }, [range, rangeKey]);
 
-  let body;
-  if (state.status === 'loading') {
-    body = (
-      <div className="status">
-        <span className="spinner" aria-hidden="true" />
-        <span className="ds-body">{t.common.loading}</span>
-      </div>
-    );
-  } else if (state.status === 'error') {
-    body = (
-      <div className="status" role="alert">
-        <AlertTriangle size={22} color="#FF5A55" />
-        <span className="ds-body">{t.common.loadFailed(errorDetail(state.error, locale))}</span>
-      </div>
-    );
+  // Filter rather than use `selectedProviders` directly: toggling a provider off and on
+  // would otherwise move it to the end of the bars and legend.
+  const homeProviders = ACTIVE_PROVIDERS.filter((p) => selectedProviders.includes(p));
+  const hasUsage = series.state.status === 'ready' && series.state.series.buckets.some((b) => b.overallTokensTotal > 0);
+
+  let history: JSX.Element;
+  if (series.state.status !== 'ready') {
+    history = <ChartStatus {...series.state} locale={locale} />;
+  } else if (!hasUsage) {
+    history = <EmptyRangeNotice locale={locale} />;
   } else {
-    const hasProviderData = state.data.tokensInOut > 0;
-    body = (
-      <>
-        <KpiCards overview={state.data} locale={locale} />
-
-        <HomeUsageSeriesChart
-          range={range}
-          selectedProviders={selectedProviders}
-          onSelectedProvidersChange={ACTIVE_PROVIDERS.length > 1 ? setSelectedProviders : undefined}
-          locale={locale}
-        />
-
-        {hasProviderData ? (
-          <>
-            <h2 className="ds-h2 section-title">{t.dashboard.usageByProvider}</h2>
-            <ProviderComparison overview={state.data} selection={selection} locale={locale} />
-          </>
-        ) : (
-          <EmptyRangeNotice locale={locale} />
-        )}
-      </>
+    history = (
+      <SeriesBarChart
+        chartData={buildHomeChartData(series.state.series, series.granularity, view, homeProviders, locale)}
+        series={series.state.series}
+        granularity={series.granularity}
+        view={view}
+        locale={locale}
+      >
+        {renderHomeUsageBars(homeProviders, locale)}
+      </SeriesBarChart>
     );
   }
 
+  const busy = state.status === 'loading';
+
   return (
     <>
-      <div className="section-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
-        <h2 className="ds-h2">{t.dashboard.companyTotals}</h2>
-        <DateRangePicker selection={selection} range={range} onChange={setSelection} disabled={state.status === 'loading'} locale={locale} />
-      </div>
+      <PageBar title={title} lede={lede}>
+        <DateRangePicker selection={selection} range={range} onChange={setSelection} disabled={busy} locale={locale} />
+      </PageBar>
 
-      {body}
+      {state.status === 'ready' && (
+        <KpiList
+          tokensInOut={state.data.tokensInOut}
+          totalEstimatedCo2={state.data.totalEstimatedCo2}
+          totalCostUsdCent={state.data.totalCostUsdCent}
+          scope={t.dashboard.kpisScopeProviders}
+          locale={locale}
+        />
+      )}
+
+      <div className="app-area-main">
+        <SectionCard
+          title={t.dashboard.history}
+          aside={
+            canSwitchResolution(rangeDays(range)) && (
+              <>
+                <span>{t.resolution.barsPer}</span>
+                <ResolutionToggle
+                  resolution={series.resolution}
+                  granularity={series.granularity}
+                  onChange={series.setResolution}
+                  locale={locale}
+                />
+              </>
+            )
+          }
+          headingId="app-history"
+        >
+          <div className="app-filter-row">
+            <ViewToggle views={VIEWS} active={view} onChange={setView} locale={locale} />
+            {(view === 'tokenTypeAll' || ACTIVE_PROVIDERS.length > 1) && (
+              <span className="app-filter-row__end">
+                {view === 'tokenTypeAll' && <CacheBadge locale={locale} />}
+                {ACTIVE_PROVIDERS.length > 1 && (
+                  <span className="app-provider-chips">
+                    <ProviderFilter selected={selectedProviders} onChange={setSelectedProviders} locale={locale} />
+                  </span>
+                )}
+              </span>
+            )}
+          </div>
+          {history}
+        </SectionCard>
+
+        {state.status === 'ready' && state.data.tokensInOut > 0 && (
+          <ProviderTable overview={state.data} selection={selection} locale={locale} />
+        )}
+        {state.status === 'ready' && state.data.tokensInOut === 0 && <EmptyRangeNotice locale={locale} />}
+        {state.status === 'error' && <ChartStatus status="error" error={state.error} locale={locale} />}
+      </div>
     </>
   );
 }

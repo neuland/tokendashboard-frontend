@@ -1,5 +1,6 @@
-import { useState, type JSX } from 'react';
+import type { JSX } from 'react';
 import { Copy, Check } from 'lucide-react';
+import { useCopy } from '~/lib/useCopy';
 import type { Provider } from '~/lib/types';
 import { buildPluginInstallCommand, buildPluginUninstallCommand, backendApiUrl } from '~/lib/plugins';
 import { dict, type Locale } from '~/i18n';
@@ -12,22 +13,17 @@ interface InstallCommandProps {
 
 export default function InstallCommand({ provider, locale, mode }: InstallCommandProps): JSX.Element | null {
   const t = dict(locale).installCommand;
-  const [copied, setCopied] = useState(false);
 
   const command =
     mode === 'install'
       ? buildPluginInstallCommand(provider, backendApiUrl())
       : buildPluginUninstallCommand(provider);
 
+  const { copied, copy } = useCopy(command ?? '');
+
   if (!command) {
     return null;
   }
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(command);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   return (
     <div className="install-command">
@@ -38,7 +34,7 @@ export default function InstallCommand({ provider, locale, mode }: InstallComman
       <button
         type="button"
         className="install-command__copy"
-        onClick={handleCopy}
+        onClick={copy}
         aria-label={copied ? t.copied : t.copy}
         title={copied ? t.copied : t.copy}
       >

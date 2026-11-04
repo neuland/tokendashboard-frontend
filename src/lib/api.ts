@@ -136,14 +136,18 @@ function parseProviderUsage(provider: Provider, json: RawUsageResponse): Provide
   };
 }
 
-/** One provider's totals and per-model breakdown for `range`. */
-export async function fetchProviderUsage(provider: Provider, range: DateRange): Promise<ProviderUsage> {
-  const params = new URLSearchParams({ from: range.from, to: range.to });
-  const res = await fetch(`${API_BASE}/api/usage/${provider}/${API_VERSION_1}?${params}`);
+async function get(path: string, params: URLSearchParams): Promise<unknown> {
+  const res = await fetch(`${API_BASE}${path}?${params}`);
   if (!res.ok) {
     throw new FetchError(res.status);
   }
-  return parseProviderUsage(provider, await res.json());
+  return res.json();
+}
+
+/** One provider's totals and per-model breakdown for `range`. */
+export async function fetchProviderUsage(provider: Provider, range: DateRange): Promise<ProviderUsage> {
+  const params = new URLSearchParams({ from: range.from, to: range.to });
+  return parseProviderUsage(provider, (await get(`/api/usage/${provider}/${API_VERSION_1}`, params)) as RawUsageResponse);
 }
 
 function parseUsageOverview(range: DateRange, json: RawOverviewResponse): UsageOverview {
@@ -182,11 +186,7 @@ function parseUsageOverview(range: DateRange, json: RawOverviewResponse): UsageO
 /** Company-wide totals, one entry per provider, for `range`. */
 export async function fetchUsageOverview(range: DateRange): Promise<UsageOverview> {
   const params = new URLSearchParams({ from: range.from, to: range.to });
-  const res = await fetch(`${API_BASE}/api/usage/all/${API_VERSION_1}?${params}`);
-  if (!res.ok) {
-    throw new FetchError(res.status);
-  }
-  return parseUsageOverview(range, await res.json());
+  return parseUsageOverview(range, (await get(`/api/usage/all/${API_VERSION_1}`, params)) as RawOverviewResponse);
 }
 
 interface RawSeriesBucket {
@@ -391,11 +391,7 @@ export async function fetchProviderUsageSeries(
   granularity: SeriesGranularity = 'day',
 ): Promise<ProviderUsageSeries> {
   const params = new URLSearchParams({ from: range.from, to: range.to, granularity });
-  const res = await fetch(`${API_BASE}/api/usage/${provider}/series/${API_VERSION_1}?${params}`);
-  if (!res.ok) {
-    throw new FetchError(res.status);
-  }
-  return parseUsageSeries(range, await res.json(), granularity);
+  return parseUsageSeries(range, (await get(`/api/usage/${provider}/series/${API_VERSION_1}`, params)) as RawSeriesResponse, granularity);
 }
 
 /**
@@ -409,9 +405,5 @@ export async function fetchAllUsageSeries(
   selectedProviders: Provider[] = ACTIVE_PROVIDERS,
 ): Promise<ProviderUsageSeries> {
   const params = new URLSearchParams({ from: range.from, to: range.to, granularity });
-  const res = await fetch(`${API_BASE}/api/usage/all/series/${API_VERSION_1}?${params}`);
-  if (!res.ok) {
-    throw new FetchError(res.status);
-  }
-  return parseAllUsageSeries(range, await res.json(), granularity, selectedProviders);
+  return parseAllUsageSeries(range, (await get(`/api/usage/all/series/${API_VERSION_1}`, params)) as RawAllSeriesResponse, granularity, selectedProviders);
 }

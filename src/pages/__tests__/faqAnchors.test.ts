@@ -1,12 +1,13 @@
 // `FaqAsterisk` links every footnote to `<faq page>#<id>`, where the id comes from the
 // dictionary. Nothing else connects those ids to the headings on the FAQ pages, so
 // renaming a heading breaks every footnote pointing at it — silently, since an unknown
-// fragment is not an error. The FAQ pages are read as source text rather than rendered:
+// fragment is not an error. The FAQ content is read as source text rather than rendered:
 // the ids are literals in the markup, and this keeps the test out of the container.
 // `?raw` hands the file over as a string through the same Vite pipeline as any import.
+// The content lives in `components/faq/`, mounted by the German and the English FAQ page.
 import { describe, expect, it } from 'vitest';
-import deFaqSource from '~/pages/faq.astro?raw';
-import enFaqSource from '~/pages/en/faq.astro?raw';
+import deFaqSource from '~/components/faq/FaqDe.astro?raw';
+import enFaqSource from '~/components/faq/FaqEn.astro?raw';
 import { de } from '~/i18n/de';
 import { en } from '~/i18n/en';
 import { LOCALES, dict, type Locale } from '~/i18n';

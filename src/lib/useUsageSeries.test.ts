@@ -128,24 +128,52 @@ describe('useUsageSeries granularity', () => {
     expect(fetchProviderUsageSeries).toHaveBeenCalledExactlyOnceWith('claude', LONG, 'week');
   });
 
-  it('honours forceDay on a long range, and refetches because granularity is part of the request', async () => {
+  it('honours a pinned day resolution on a long range, and refetches because granularity is part of the request', async () => {
     // given
     const { result } = renderHook(() => useUsageSeries(LONG, 'claude'));
     await act(async () => {});
     expect(result.current.granularity).toBe('week');
-    expect(result.current.forceDay).toBe(false);
 
     // when
     await act(async () => {
-      result.current.setForceDay(true);
+      result.current.setResolution('day');
     });
 
     // then
     expect(result.current.granularity).toBe('day');
-    expect(result.current.forceDay).toBe(true);
     expect(fetchProviderUsageSeries).toHaveBeenCalledTimes(2);
     expect(vi.mocked(fetchProviderUsageSeries).mock.calls[1][2]).toBe('day');
   });
+});
+
+describe('useUsageSeries resolution', () => {
+  it('starts on auto and reports what auto resolves to', async () => {
+    // given / when
+    const { result } = renderHook(() => useUsageSeries(LONG, 'claude'));
+    await act(async () => {});
+
+    // then
+    expect(result.current.resolution).toBe('auto');
+    expect(result.current.autoGranularity).toBe('week');
+    expect(result.current.granularity).toBe('week');
+  });
+
+  it('pins weeks on a short range', async () => {
+    // given
+    const { result } = renderHook(() => useUsageSeries(SHORT, 'claude'));
+    await act(async () => {});
+    expect(result.current.granularity).toBe('day');
+
+    // when
+    await act(async () => {
+      result.current.setResolution('week');
+    });
+
+    // then
+    expect(result.current.granularity).toBe('week');
+    expect(fetchProviderUsageSeries).toHaveBeenLastCalledWith('claude', SHORT, 'week');
+  });
+
 });
 
 describe('useUsageSeries reacts to its inputs, not to renders', () => {

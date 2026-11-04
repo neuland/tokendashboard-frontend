@@ -3,23 +3,12 @@ import { Bar } from 'recharts';
 import { TOKEN_TYPES, TOKEN_TYPE_LABELS, TOKEN_TYPE_COLORS } from '~/lib/types';
 import type { View } from '~/lib/seriesChartData';
 import { dict, type Locale } from '~/i18n';
+import { MODEL_COLORS } from '~/lib/modelColors';
 
 const CO2_COLOR = '#0EA19C';
 const COST_COLOR = '#FF5A55';
 const INSTALLATIONS_COLOR = '#77C4B4';
 const TOKENS_PER_INSTALLATION_COLOR = '#E54D4D';
-
-/** Cycled per model family, since how many the backend reports is not known up front. */
-const MODEL_COLORS = [
-  '#FF5A55',
-  '#0EA19C',
-  '#77C4B4',
-  '#857871',
-  '#FFACAA',
-  '#B7DCE1',
-  '#FF9A3C',
-  '#E54D4D',
-];
 
 /** The bar segments for a view, keyed by the row keys `buildProviderChartData` writes. */
 export function renderProviderUsageBars(view: View, families: string[], locale: Locale): JSX.Element | JSX.Element[] {

@@ -1,6 +1,5 @@
 ---
 import Layout from '~/layouts/Layout.astro';
-import Header from '~/components/Header.astro';
 import ProviderDetail from '~/components/ProviderDetail.tsx';
 import { PROVIDERS, PROVIDER_LABELS } from '~/lib/types';
 import type { Provider } from '~/lib/types';
@@ -17,6 +16,11 @@ const t = dict(locale);
 ---
 
 <Layout title={t.providerPage.title(PROVIDER_LABELS[locale][provider], COMPANY_NAME)}>
-  <Header title={PROVIDER_LABELS[locale][provider]} lede={t.providerDetail.lede} />
-  <ProviderDetail client:only="react" provider={provider} locale={locale} />
+  <ProviderDetail
+    client:only="react"
+    provider={provider}
+    locale={locale}
+    title={PROVIDER_LABELS[locale][provider]}
+    lede={t.providerDetail.lede}
+  />
 </Layout>

@@ -128,7 +128,7 @@ mapping is the place to update when the backend schema changes.
 ```
 src/
 ├── components/      React islands & Astro components (dashboard, KPIs, charts …)
-├── layouts/         Layout.astro – global page shell
+├── layouts/         Layout.astro – app shell with the sidebar
 ├── lib/             api.ts, types.ts, format.ts, range.ts (time window logic),
 │                    seriesChartData.ts, providerSelection.ts, *.test.ts
 ├── pages/           index.astro, faq.astro, provider/[provider].astro; en/ mirrors them

@@ -132,7 +132,7 @@ export function formatDayShort(iso: string, locale: Locale): string {
  * the Thursday of that week: ISO weeks belong to whichever year contains their
  * Thursday, so around New Year the year returned can differ from the input year.
  */
-function isoWeekInfo(iso: string): { week: number; year: number } {
+export function isoWeekInfo(iso: string): { week: number; year: number } {
   const [y, m, d] = iso.split('-').map(Number);
   const date = new Date(Date.UTC(y, (m ?? 1) - 1, d));
   const dayNum = (date.getUTCDay() + 6) % 7; // Monday = 0 … Sunday = 6
@@ -149,4 +149,9 @@ function isoWeekInfo(iso: string): { week: number; year: number } {
 export function formatWeekLabel(iso: string, locale: Locale): string {
   const { week, year } = isoWeekInfo(iso);
   return dict(locale).formats.weekLabel(week, year);
+}
+
+/** The same without the year, e.g. `KW4` (de) / `W4` (en) — see `weekTickLabels`. */
+export function formatWeekShort(iso: string, locale: Locale): string {
+  return dict(locale).formats.weekShort(isoWeekInfo(iso).week);
 }

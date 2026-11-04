@@ -1,0 +1,641 @@
+/* ==========================================================================
+   App shell with a grouped sidebar, two-column content and full-width
+   tables. Loaded on top of global.css by Layout.astro; every class is
+   prefixed `app-`, and restyles of the shared components are scoped to `.app`.
+   ========================================================================== */
+
+:root {
+  --app-line: #E6E2DC;
+  --app-line-soft: #EEEBE6;
+  --app-muted: #6B5F59;        /* 5.6:1 on white, unlike --fg-3 on the warm bg */
+  --app-ink: #2D2D2D;
+  --app-accent-text: #D63F3A;  /* brand red, darkened for small text */
+  --app-sidebar-w: 248px;
+  --app-rail-w: 320px;
+  /* Grey of the plugin's install line, also the track of the segmented controls */
+  --app-cmd-bg: #F1EEE9;
+  --app-radius: 12px;
+  /* Page behind the cards: a step darker than the brand's warm white (#F8F7F5), so the
+     white cards stand off it; card edge and shadow add the rest. */
+  --app-page-bg: #EEEBE6;
+  --app-card-line: #DDD8D0;
+  --app-card-shadow: 0 1px 2px rgba(45, 45, 45, 0.06), 0 4px 12px rgba(45, 45, 45, 0.05);
+  /* Card surfaces. Very light gradients, running left to right with a slight tilt:
+     white fading into the warm brand grey for regular cards, a whisper of sage for the
+     soft ones (plugin, notes). The left ~40% stays pure white, so the white sticky
+     model column of the tables sits seamlessly on it. Set both to a flat colour
+     (var(--bg-1) / #FAF9F7) to switch the look off. */
+  --app-card-bg: linear-gradient(110deg, #FFFFFF 0%, #FFFFFF 40%, #FAF7F3 100%);
+  --app-card-soft-bg: linear-gradient(110deg, #FBFAF8 0%, #F7F6F2 50%, #F1F6F3 100%);
+}
+
+body.app {
+  background: var(--app-page-bg);
+  color: var(--app-ink);
+  font-size: 16px;
+}
+/* Numbers in running text and tables: the sans face with equal-width digits, so
+   columns line up without the technical look of the mono face (kept for commands). */
+.app-num { font-variant-numeric: tabular-nums; }
+.app :where(a) { color: var(--app-accent-text); text-decoration: none; }
+.app :where(a:hover) { color: #B8332E; }
+
+/* ---------- Shell ---------- */
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: stretch;
+}
+.app-sidebar {
+  flex: 0 0 var(--app-sidebar-w);
+  width: var(--app-sidebar-w);
+  background: var(--bg-1);
+  border-right: 1px solid var(--app-line);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 16px;
+  box-sizing: border-box;
+  /* Stays put while long pages (the FAQ) scroll underneath */
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  white-space: nowrap;
+  transition: flex-basis var(--ease-normal), width var(--ease-normal), padding var(--ease-normal);
+}
+/* Text that fades when the rail collapses to icons. It keeps its width and is
+   clipped by the rail, so nothing reflows: on collapse it fades first, on expand it
+   fades in once the rail has opened. */
+.app-fade { transition: opacity 0.15s ease 0.2s; }
+.app-sidebar__foot { white-space: normal; transition: opacity 0.15s ease 0.2s, visibility 0s linear 0.2s; }
+/* A row of constant height under the brand, so the button never shifts the groups */
+.app-sidebar__toggle { height: 32px; display: flex; justify-content: flex-end; align-items: center; margin: -6px 0 14px; }
+.app-collapse-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--app-line);
+  border-radius: 8px;
+  background: var(--bg-1);
+  color: var(--app-muted);
+  cursor: pointer;
+}
+.app-collapse-btn:hover { color: var(--app-ink); background: var(--bg-2); }
+.app-collapse-btn { transition: margin var(--ease-normal); }
+.app-collapse-btn svg { transition: transform var(--ease-normal); }
+
+/* Collapsed: the rail narrows to 72px while every icon keeps its place — sidebar
+   padding 16 + link padding 12 puts a 16px icon at x 28..44, which is also the centre
+   of the narrow rail. Only the width, the text opacity and the button margin animate. */
+html.app-collapsed .app-sidebar { flex-basis: 72px; width: 72px; }
+html.app-collapsed .app-fade { opacity: 0; pointer-events: none; transition-delay: 0s; transition-duration: 0.12s; }
+html.app-collapsed .app-collapse-btn { margin-right: 4px; }
+html.app-collapsed .app-collapse-btn svg { transform: rotate(180deg); }
+html.app-collapsed .app-sidebar__foot { opacity: 0; visibility: hidden; transition: opacity 0.12s ease, visibility 0s linear 0.12s; }
+.app-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  /* Wide enough for the model table's full token columns on a large screen, while a
+     margin to the window edge remains; below ~1700px the padding alone sets the width */
+  max-width: 1640px;
+  margin: 0 auto;
+  padding: 40px 36px 64px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Brand */
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 12px 20px;
+  color: var(--app-ink);
+  font-weight: var(--fw-semibold);
+}
+.app-brand:hover { color: var(--app-ink); }
+/* In the sidebar the 26px mark is centred on the 16px nav-icon column (centre x 36),
+   so it sits in the middle of the collapsed rail and never moves when toggling. */
+.app-sidebar .app-brand { padding-left: 7px; }
+.app-brand__mark { width: 26px; height: 23px; color: var(--neuland-primary); flex-shrink: 0; }
+.app-brand__text { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+.app-brand__text > * { overflow: hidden; white-space: nowrap; }
+.app-brand__sub { font-weight: var(--fw-book); font-size: 12px; color: var(--app-muted); }
+
+/* Navigation */
+.app-nav { display: flex; flex-direction: column; gap: 20px; }
+.app-nav__group { display: flex; flex-direction: column; gap: 2px; }
+.app-eyebrow {
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  color: var(--app-muted);
+  font-weight: 500;
+}
+.app-nav__label { padding: 0 12px 6px; height: 16px; line-height: 16px; }
+.app-nav__link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  color: #4A4440;
+  font-size: 15px;
+  min-height: 40px;
+  box-sizing: border-box;
+}
+.app-nav__link:hover { background: var(--bg-2); color: var(--app-ink); }
+.app-nav__link[aria-current='page'] { background: #FFF1F0; color: var(--app-ink); font-weight: var(--fw-semibold); }
+.app-nav__link svg { flex-shrink: 0; }
+.app-nav__link--soon { color: var(--app-muted); cursor: default; }
+.app-nav__link--soon:hover { background: transparent; color: var(--app-muted); }
+.app-nav__link--soon svg { opacity: 0.6; }
+.app-soon {
+  margin-left: auto;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: var(--fw-semibold);
+  color: #5B3FA3;
+  background: #EEE8FA;
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+.app-soon--beta { color: #fff; background: #5B3FA3; }
+.app-glyph { flex-shrink: 0; vertical-align: middle; }
+
+.app-sidebar__foot {
+  margin-top: auto;
+  padding: 20px 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--app-muted);
+}
+.app-locale a, .app-locale span { color: inherit; }
+.app .app-credit-link { color: var(--app-accent-text); text-decoration: underline; text-underline-offset: 2px; }
+.app .app-credit-link:hover { color: var(--app-ink); }
+.app-locale strong { color: var(--app-ink); }
+
+/* Mobile top bar + drawer: hidden on desktop */
+.app-topbar { display: none; }
+.app-backdrop { display: none; }
+
+/* ---------- Page bar: title left, filters right ---------- */
+.app-pagebar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+.app-pagebar__crumbs { font-size: 13px; color: var(--app-muted); margin-bottom: 4px; }
+.app-pagebar__crumbs span { margin: 0 6px; }
+.app-pagebar__titlerow { display: flex; align-items: center; gap: 8px; }
+.app-pagebar__title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1.1;
+  color: var(--app-ink);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.app-pagebar__lede { margin: 6px 0 0; color: var(--app-muted); font-size: 15px; }
+.app-pagebar__tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+}
+.app .app-pagebar__tools .rp { margin-top: 0; }
+
+/* Resolution toggle */
+
+/* Segmented control: a grey track, the chosen option a white chip. Quiet enough that
+   several of them on one page do not compete with the data. */
+.app-seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--app-line);
+  border-radius: 9px;
+  background: var(--app-cmd-bg);
+}
+.app-seg__btn {
+  font: inherit;
+  font-size: 14px;
+  padding: 5px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--app-muted);
+  cursor: pointer;
+  min-height: 30px;
+}
+.app-seg__btn:hover { color: var(--app-ink); }
+.app-seg__btn[aria-pressed='true'] { background: var(--bg-1); color: var(--app-ink); font-weight: 500; box-shadow: 0 1px 2px rgba(45, 45, 45, 0.12); }
+.app-seg__btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.app-seg--compact .app-seg__btn { font-size: 13px; padding: 3px 10px; min-height: 26px; }
+
+/* ---------- Content grid ----------
+   Main column left, the rail right. */
+.app-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--app-rail-w);
+  gap: 32px;
+  align-items: start;
+}
+.app-area-main { grid-column: 1; grid-row: 1 / span 2; display: flex; flex-direction: column; gap: 32px; min-width: 0; }
+.app-area-rail { grid-column: 2; display: flex; flex-direction: column; gap: 32px; min-width: 0; }
+
+/* Key figure band under the page bar */
+.app-kpi-band { display: flex; flex-direction: column; gap: 12px; }
+.app-kpi-band__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; padding: 0 2px; }
+.app-kpi-band__title { margin: 0; font-size: 15px; font-weight: 500; color: var(--app-ink); }
+.app-kpi-band__scope { font-size: 14px; color: var(--app-muted); }
+
+/* ---------- Cards ---------- */
+.app-card {
+  background: var(--app-card-bg);
+  border: 1px solid var(--app-card-line);
+  border-radius: var(--app-radius);
+  box-shadow: var(--app-card-shadow);
+}
+.app-card--soft { background: var(--app-card-soft-bg); }
+.app-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 22px 28px 0;
+}
+.app-card__title { margin: 0; font-size: 18px; font-weight: var(--fw-semibold); color: var(--app-ink); display: flex; align-items: baseline; gap: 12px; }
+.app-card__aside { font-size: 14px; color: var(--app-muted); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.app-card__body { padding: 18px 28px 28px; }
+.app-card__body--flush { padding: 14px 0 0; }
+.app-card__foot {
+  padding: 14px 28px;
+  border-top: 1px solid var(--app-line-soft);
+  font-size: 13px;
+  color: var(--app-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  justify-content: space-between;
+}
+
+/* Key figure tiles (KpiList): the most important numbers of a page, three across,
+   each tinted and striped in its series colour, the number twice the body size. */
+.app-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.app-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 22px 20px;
+  border-radius: var(--app-radius);
+  border: 1px solid var(--app-card-line);
+  border-left: 5px solid var(--app-kpi-color);
+  background: color-mix(in srgb, var(--app-kpi-color) 6%, white);
+  box-shadow: var(--app-card-shadow);
+  min-width: 0;
+}
+.app-kpi__label { display: flex; align-items: center; gap: 2px; }
+.app-kpi__label .footnote-mark { font-size: 0.9em; line-height: 1; }
+.app-kpi__value { white-space: nowrap; line-height: 1.1; }
+.app-kpi__num { font-size: 34px; font-weight: 500; color: var(--app-ink); letter-spacing: -0.01em; }
+.app-kpi__unit { font-size: 15px; color: var(--app-muted); margin-left: 6px; }
+
+/* Share bars */
+.app-share { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: #F1EEE9; }
+.app-share--thin { height: 6px; }
+.app-share__fill { height: 100%; border-radius: inherit; }
+.app-share-cell { display: flex; align-items: center; gap: 10px; }
+.app-share-cell .app-share { flex: 1; min-width: 40px; }
+.app-share-cell__pct { font-variant-numeric: tabular-nums; font-size: 13px; color: var(--app-muted); width: 40px; text-align: right; flex: none; }
+
+/* Token-type rows */
+.app-trow { display: flex; flex-direction: column; gap: 8px; padding: 9px 0; }
+.app-trow:first-child { padding-top: 0; }
+.app-trow:last-child { padding-bottom: 0; }
+.app-trow__line { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; }
+.app-tgroup + .app-tgroup { margin-top: 18px; }
+.app-tgroup__head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; font-size: 14px; font-weight: var(--fw-semibold); color: var(--app-ink); }
+.app-tgroup__rows { margin-left: 3px; padding-left: 14px; border-left: 2px solid var(--app-line); }
+.app-tgroup__rows .app-trow__line { color: var(--app-muted); }
+.app-tgroup__rows .app-trow__line .app-num { color: var(--app-ink); }
+
+/* Big number (plugin card) */
+.app-big { font-size: 28px; font-weight: 500; color: var(--app-ink); }
+.app-big + span { font-size: 14px; color: var(--app-muted); margin-left: 6px; }
+.app-stack { display: flex; flex-direction: column; gap: 14px; }
+.app .app-stack .install-command { margin: 0; }
+.app .app-stack .ds-small { font-size: 14px; line-height: 1.5; }
+
+/* ---------- Buttons, pills ---------- */
+.app-button {
+  font: inherit;
+  font-size: 13px;
+  font-weight: var(--fw-semibold);
+  padding: 9px 16px;
+  border: 1px solid var(--app-ink);
+  border-radius: 8px;
+  background: var(--app-ink);
+  color: #fff;
+  cursor: pointer;
+  min-height: 36px;
+}
+.app-button:hover { background: #000; }
+.app-button:disabled { opacity: 0.5; cursor: not-allowed; }
+.app-button--quiet { background: var(--bg-1); color: var(--app-ink); border-color: var(--app-line); font-weight: var(--fw-book); align-self: flex-start; }
+.app-button--quiet:hover { background: var(--bg-2); }
+.app-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: var(--fw-semibold); padding: 3px 10px; border-radius: 999px; }
+/* Cache colour of the token type list (cache write), so the badge reads as "cache" at a glance */
+.app-pill--cache { gap: 4px; padding: 2px 8px; white-space: nowrap; background: #DDF1F0; color: #075E5B; box-shadow: inset 0 0 0 1px #8FD0CD; }
+
+/* ---------- Tables ---------- */
+.app-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.app-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+
+/* `.app-table.app-table--tight` so it outranks the general `.app-table th/td` rule below */
+.app-table.app-table--tight th, .app-table.app-table--tight td { padding-left: 10px; padding-right: 10px; }
+.app-table.app-table--tight th:first-child, .app-table.app-table--tight td:first-child { padding-left: 28px; }
+.app-table.app-table--tight th:last-child, .app-table.app-table--tight td:last-child { padding-right: 28px; }
+/* One rule under the head; the rows themselves are set apart by their height alone */
+.app-table th {
+  font-size: 13px;
+  color: var(--app-muted);
+  font-weight: 500;
+  text-align: left;
+  padding: 8px 16px 12px;
+  border-bottom: 1px solid var(--app-line);
+  white-space: nowrap;
+}
+.app-table td { padding: 14px 16px; white-space: nowrap; }
+.app-table tbody tr:first-child td { padding-top: 18px; }
+.app-table th.num, .app-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.app-table .app-sticky { position: sticky; left: 0; background: var(--bg-1); box-shadow: 1px 0 0 var(--app-line-soft); z-index: 1; }
+.app-table tr.app-total td { font-weight: var(--fw-semibold); border-top: 1px solid var(--app-line); padding-top: 16px; padding-bottom: 20px; }
+/* Column widths from the <colgroup>; cell content that does not fit is cut, not pushed */
+.app-table--fixed { table-layout: fixed; }
+.app-table--fixed td, .app-table--fixed th { overflow: hidden; text-overflow: ellipsis; }
+.app-table tr.app-sub td { color: var(--app-muted); background: #FCFBF9; font-size: 14px; padding-top: 10px; padding-bottom: 10px; }
+.app-table tr.app-sub td.app-sticky { background: #FCFBF9; padding-left: 36px; }
+.app-table .app-family-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+.app-table a.app-row-link { color: var(--app-ink); font-weight: var(--fw-semibold); display: inline-flex; align-items: center; gap: 8px; }
+.app-table a.app-row-link:hover { color: var(--app-accent-text); }
+.app-table .app-head-mark { display: inline-flex; align-items: baseline; gap: 2px; }
+
+/* ---------- Restyled shared components ---------- */
+/* View switch as text tabs: only the chosen view carries weight and an underline */
+.app .view-toggle { border: 0; border-radius: 0; overflow: visible; flex-wrap: wrap; gap: 2px; background: transparent; }
+.app .view-toggle__btn { font-size: 14px; padding: 6px 8px 8px; min-height: 36px; background: transparent; color: var(--app-muted); border-bottom: 2px solid transparent; border-radius: 0; white-space: nowrap; }
+.app .view-toggle__btn + .view-toggle__btn { border-left: 0; }
+.app .view-toggle__btn:hover { background: transparent; color: var(--app-ink); }
+.app .view-toggle__btn--active, .app .view-toggle__btn--active:hover { background: transparent; color: var(--app-ink); font-weight: var(--fw-semibold); border-bottom-color: var(--app-ink); }
+/* Provider filter as chips with the provider's colour dot; off = faded */
+.app .app-provider-chips .view-toggle { gap: 6px; }
+.app .app-provider-chips .view-toggle__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 10px;
+  min-height: 30px;
+  border: 1px solid var(--app-line);
+  border-radius: 999px;
+  background: var(--bg-1);
+  color: var(--app-muted);
+  font-size: 13px;
+  font-weight: var(--fw-book);
+}
+.app .app-provider-chips .view-toggle__btn::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--pf-color); opacity: 0.3; }
+.app .app-provider-chips .view-toggle__btn:hover { background: var(--bg-2); color: var(--app-ink); }
+.app .app-provider-chips .view-toggle__btn--active { background: var(--bg-1); color: var(--app-ink); border-color: #C9C2B9; font-weight: 500; }
+.app .app-provider-chips .view-toggle__btn--active::before { opacity: 1; }
+.app .chart-card { border: 0; box-shadow: none; padding: 0; background: transparent; }
+.app .chart-wrap { height: clamp(220px, 32vw, 300px); }
+.app .rp__trigger { border-radius: 8px; box-shadow: none; }
+.app .card { box-shadow: none; }
+.app .status { min-height: 120px; }
+/* Grey box: label on its own line, the command wrapping, the copy button at the right */
+.app .install-command {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 8px;
+  align-items: start;
+  padding: 10px 10px 10px 14px;
+  border-radius: 8px;
+  background: var(--app-cmd-bg);
+  font-size: 12px;
+}
+.app .install-command__label { grid-column: 1 / -1; }
+.app .install-command__code { overflow: visible; white-space: pre-wrap; word-break: break-all; line-height: 1.5; }
+.app .install-command__copy { padding: 1px; color: var(--app-muted); }
+.app .install-command__copy:hover { color: var(--app-ink); }
+
+.app-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin-bottom: 22px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--app-line-soft);
+}
+.app-filter-row__end { margin-left: auto; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-bottom: 6px; }
+
+/* ---------- FAQ ----------
+   The markup lives in components/faq; these rules give it
+   the card look: the contents list reads like the sidebar, every question is a card,
+   the groups are eyebrow labels. `.app-faq.app-faq` outranks Astro's scoped selectors. */
+.app .app-faq.app-faq .faq { grid-template-columns: 220px minmax(0, 1fr); gap: 24px; }
+.app .app-faq.app-faq .faq__toc {
+  top: 24px;
+  background: var(--app-card-bg);
+  border: 1px solid var(--app-card-line);
+  border-radius: var(--app-radius);
+  box-shadow: var(--app-card-shadow);
+  padding: 16px 10px;
+}
+.app .app-faq.app-faq .faq__toc-group + .faq__toc-group { margin-top: 22px; }
+/* Group heading: dark, spaced capitals on a rule; the entries below are lighter and indented */
+.app .app-faq.app-faq .faq__toc-label {
+  margin: 0 4px 6px;
+  padding: 0 8px 8px;
+  border-bottom: 1px solid var(--app-line);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--app-ink);
+  font-weight: var(--fw-semibold);
+}
+.app .app-faq.app-faq .faq__toc ul { border-left: 0; gap: 2px; }
+.app .app-faq.app-faq .faq__toc a {
+  margin: 0;
+  padding: 7px 12px 7px 20px;
+  border: 0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: var(--fw-book);
+  color: var(--app-muted);
+}
+.app .app-faq.app-faq .faq__toc a:hover { background: var(--bg-2); color: var(--app-ink); }
+
+.app .app-faq.app-faq .faq__content { max-width: none; gap: 12px; }
+.app .app-faq.app-faq .faq__group {
+  margin: 24px 0 6px 2px;
+  font-size: 14px;
+  color: var(--app-muted);
+  font-weight: 500;
+}
+.app .app-faq.app-faq .faq__group:first-child { margin-top: 0; }
+.app .app-faq.app-faq .faq__entry {
+  padding: 22px;
+  border: 1px solid var(--app-card-line);
+  border-top: 1px solid var(--app-card-line);
+  border-radius: var(--app-radius);
+  background: var(--app-card-bg);
+  box-shadow: var(--app-card-shadow);
+  scroll-margin-top: 24px;
+}
+.app .app-faq.app-faq .faq__entry:target { border-color: var(--neuland-primary-light); box-shadow: 0 0 0 3px #FFF1F0; }
+.app .app-faq.app-faq .faq__q { margin: 0 0 12px; font-size: 17px; font-weight: var(--fw-semibold); color: var(--app-ink); }
+.app .app-faq.app-faq .faq__entry:target .faq__q { color: var(--app-ink); }
+.app .app-faq.app-faq .faq__entry p { font-size: 15px; color: var(--app-ink); line-height: 1.55; }
+.app .app-faq.app-faq .faq__entry a { color: var(--app-accent-text); }
+.app .app-faq.app-faq .faq__caveat { color: var(--app-muted); }
+.app .app-faq.app-faq .faq__details { border-color: var(--app-line); border-radius: 8px; background: #FAF9F7; padding: 14px 16px; }
+.app .app-faq.app-faq .faq__details summary { font-size: 13px; }
+
+@media (max-width: 768px) {
+  .app .app-faq.app-faq .faq { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .app .app-faq.app-faq .faq__content, .app .app-faq.app-faq .faq__entry { min-width: 0; overflow-wrap: anywhere; }
+  .app .app-faq.app-faq .faq__toc { padding: 12px 10px; }
+  .app .app-faq.app-faq .faq__toc ul { gap: 4px 6px; }
+  .app .app-faq.app-faq .faq__toc-label { border-bottom: 0; padding-bottom: 2px; margin-bottom: 4px; }
+  .app .app-faq.app-faq .faq__toc a { padding: 6px 10px; border: 1px solid var(--app-line); border-radius: 999px; font-size: 13px; color: #4A4440; }
+  .app .app-faq.app-faq .faq__entry { padding: 16px; }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1100px) {
+  :root { --app-rail-w: 280px; }
+  .app-main { padding: 28px 24px 40px; }
+}
+
+@media (max-width: 1100px) {
+  .app-kpi__num { font-size: 28px; }
+}
+
+@media (max-width: 900px) {
+  .app-shell { flex-direction: column; }
+  .app-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px 10px 16px;
+    background: var(--bg-1);
+    border-bottom: 1px solid var(--app-line);
+    position: sticky;
+    top: 0;
+    z-index: 30;
+  }
+  .app-topbar .app-brand { padding: 0; }
+  .app-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    border: 1px solid var(--app-line);
+    background: var(--bg-1);
+    color: var(--app-ink);
+    cursor: pointer;
+  }
+  .app-sidebar, html.app-collapsed .app-sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    height: auto;
+    width: min(300px, 86vw);
+    flex-basis: auto;
+    padding: 20px 16px;
+    transform: translateX(100%);
+    transition: transform var(--ease-normal);
+    z-index: 50;
+    box-shadow: -12px 0 32px rgba(45, 45, 45, 0.15);
+    overflow-y: auto;
+    border-right: 0;
+    white-space: normal;
+  }
+  html.app-collapsed .app-fade { opacity: 1; pointer-events: auto; }
+  html.app-collapsed .app-sidebar__foot { opacity: 1; visibility: visible; }
+  .app-sidebar__toggle { display: none; }
+  .app-sidebar .app-brand { display: none; }
+  .app-sidebar__close { display: flex; justify-content: space-between; align-items: center; padding: 0 0 12px 12px; }
+  .app-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(45, 45, 45, 0.45);
+    z-index: 40;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--ease-normal);
+  }
+  .app-shell--open .app-sidebar { transform: none; }
+  .app-backdrop { display: block; }
+  .app-shell--open .app-backdrop { opacity: 1; pointer-events: auto; }
+
+  .app-main { padding: 20px 16px 32px; gap: 16px; }
+  .app-pagebar__title { font-size: 24px; }
+  .app-pagebar__tools { width: 100%; }
+  .app .app-pagebar__tools .rp { width: 100%; }
+  .app .app-pagebar__tools .rp__trigger { width: 100%; }
+
+  /* One column: main, then the rail */
+  .app-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .app-area-main { grid-column: 1; grid-row: auto; }
+  .app-area-rail { grid-column: 1; grid-row: auto; }
+  .app-area-main, .app-area-rail { gap: 20px; }
+  .app-main { gap: 20px; }
+  .app-kpis { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .app-kpi { padding: 14px 18px 16px; }
+  .app-kpi__num { font-size: 28px; }
+  .app-card__head { padding: 18px 18px 0; }
+  .app-card__body { padding: 14px 18px 18px; }
+  .app-card__body--flush { padding: 10px 0 0; }
+  .app-card__foot { padding: 12px 18px; }
+  .app-table.app-table--tight th:first-child, .app-table.app-table--tight td:first-child { padding-left: 18px; }
+  .app-table.app-table--tight th:last-child, .app-table.app-table--tight td:last-child { padding-right: 18px; }
+  .app .chart-wrap { height: 200px; }
+  .app .view-toggle { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; }
+}
+
+@media (min-width: 901px) {
+  .app-sidebar__close { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-sidebar, .app-backdrop, .app-fade, .app-collapse-btn svg { transition: none; }
+}

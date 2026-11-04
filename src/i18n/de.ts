@@ -5,6 +5,54 @@ export const de = {
   nav: {
     overview: 'Übersicht',
     faq: 'FAQ',
+    // Grouped navigation in the sidebar
+    groupOverview: 'Übersicht',
+    companyWide: 'Firmenweit',
+    groupProviders: 'Provider',
+    groupHelp: 'Hilfe',
+    co2Method: 'CO₂-Methodik',
+    installPlugins: 'Plugins installieren',
+    menuOpen: 'Menü öffnen',
+    menuClose: 'Menü schließen',
+    collapse: 'Navigation einklappen',
+    expand: 'Navigation ausklappen',
+    build: (buildDate: string): string => `Build ${buildDate}`,
+    // Teased areas, not yet built
+    soon: 'bald',
+    soonTitle: 'In Planung, noch nicht verfügbar',
+    beta: 'Beta',
+    betaTitle: 'Noch in der Beta',
+  },
+  resolution: {
+    label: 'Auflösung',
+    day: 'Tag',
+    week: 'Woche',
+    autoHint: 'Ab 2 Monaten Zeitraum automatisch Woche',
+    barsPer: 'Balken je',
+  },
+  dashboard: {
+    kpis: 'Kennzahlen',
+    kpisScopeProviders: 'Alle Provider',
+    kpisScopeModels: 'Alle Modelle',
+    history: 'Verlauf',
+    providerFilterLabel: 'Provider',
+    byProvider: 'Verbrauch nach Provider',
+    share: 'Anteil',
+    models: 'Modelle',
+    modelsNote: 'Zeile aufklappen für Modellversionen',
+    columns: 'Spalten',
+    columnsCompact: 'Kompakt',
+    columnsAll: 'Alle Token-Typen',
+    tokenTypes: 'Token-Typen',
+    tokenGroups: { inOut: 'In / Out', cache: 'Cache' },
+    pluginTracking: 'Plugin-Tracking',
+    pluginWindow: 'Letzte 4 Wochen',
+    installButton: 'Plugin installieren',
+    activeInstallations: 'aktive Installationen',
+    breadcrumbProviders: 'Provider',
+    expandFamily: 'Modellversionen anzeigen',
+    collapseFamily: 'Modellversionen ausblenden',
+    detailsLink: 'Details',
   },
   common: {
     unknownError: 'Unbekannter Fehler',
@@ -14,12 +62,14 @@ export const de = {
     tokensLabel: 'Tokens',
     scopeProviders: 'Provider',
     scopeModels: 'Modelle',
-    total: 'Gesamt',
+    sum: 'Summe',
+    inclCache: 'inkl. Cache',
     co2Column: 'CO₂ (geschätzt)',
     costColumn: 'Kosten',
   },
   formats: {
     weekLabel: (week: number, year: number): string => `KW${week} ${year}`,
+    weekShort: (week: number): string => `KW${week}`,
   },
   layout: {
     // `company` may be empty (PUBLIC_COMPANY_NAME unset); every template has to read
@@ -31,7 +81,7 @@ export const de = {
     brandSub: 'Token- & CO₂-Dashboard',
     navAriaLabel: 'Hauptnavigation',
     footerProject: (buildDate: string): string => `Agentic - Ökonomie und Ökologie | ${buildDate} | `,
-    footerCredit: 'Ein Projekt von neuland - Büro für Informatik',
+    footerCredit: 'Ein Projekt von',
   },
   header: {
     defaultTitle: 'Verbrauchsübersicht',
@@ -63,7 +113,7 @@ export const de = {
   },
   views: {
     tokenType: 'Verlauf nach Token-Typ',
-    tokenTypeAll: 'Verlauf nach Token-Typ (gesamt)',
+    tokenTypeAll: 'Verlauf nach Token-Typ inkl. Cache',
     model: 'Verlauf nach Modell',
     co2: 'Verlauf nach CO₂',
     cost: 'Verlauf nach Preis',
@@ -72,18 +122,12 @@ export const de = {
   },
   viewToggleLabels: {
     tokenType: 'Token in/out',
-    tokenTypeAll: 'Token gesamt',
+    tokenTypeAll: 'Token inkl. Cache',
     model: 'Modell-Auswertung',
     co2: 'CO₂',
     cost: 'Preis',
     installations: 'Installationen',
     tokensPerInstallation: 'Ø Tokens/Installation',
-  },
-  tokenTypes: {
-    input: 'In-Tokens',
-    output: 'Out-Tokens',
-    cacheWrite: 'Cache-Write',
-    cacheRead: 'Cache-Read',
   },
   dateRangePicker: {
     customRange: 'Eigener Datumsbereich',
@@ -116,7 +160,7 @@ export const de = {
     trackingFallback: 'Tracking-Plugin',
     descriptionPrefix: 'Der Verbrauch wird über ein',
     descriptionSuffix:
-      'erfasst. Nur Nutzer mit installiertem Plugin fließen in die Auswertung ein — die ausgewiesene Nutzerzahl bildet daher die aktiven Plugin-Installationen im gewählten Zeitraum ab.',
+      'erfasst. Nur Nutzer mit installiertem Plugin fließen in die Auswertung ein — die ausgewiesene Zahl bildet daher die aktiven Plugin-Installationen der letzten vier Wochen ab.',
   },
   emptyRangeNotice: {
     message: 'Für den gewählten Zeitraum liegen noch keine Daten vor.',
@@ -126,13 +170,6 @@ export const de = {
     uninstallLabel: 'Deinstallieren',
     copy: 'Kopieren',
     copied: 'Kopiert!',
-  },
-  forceDayToggle: {
-    label: 'Immer nach Tag',
-  },
-  dashboard: {
-    companyTotals: 'Firmenweite Gesamtwerte',
-    usageByProvider: 'Verbrauch nach Provider',
   },
   providerDetail: {
     lede: 'Token- und CO₂-Verbrauch nach Modell und Token-Typ.',
@@ -153,9 +190,6 @@ export const de = {
     installationsSuffix: 'Installationen',
     tokensPerInstallationSuffix: 'Tokens/Installation',
     inOutSuffix: ' (In+Out)',
-  },
-  homeUsageSeriesChart: {
-    providerHistoryLabel: 'Provider im Verlauf:',
   },
   usageBars: {
     co2: 'CO₂',

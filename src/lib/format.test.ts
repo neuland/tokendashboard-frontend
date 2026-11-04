@@ -9,6 +9,7 @@ import {
   formatTokensAdaptive,
   formatUsd,
   formatWeekLabel,
+  formatWeekShort,
 } from './format';
 
 describe('formatNumber', () => {
@@ -101,6 +102,14 @@ describe('formatWeekLabel', () => {
   it('en: W<week> <year>', () => {
     // given / when / then
     expect(formatWeekLabel('2026-01-22', 'en')).toBe('W4 2026');
+  });
+});
+
+describe('formatWeekShort', () => {
+  it('drops the year, per locale', () => {
+    // given / when / then — one locale per line
+    expect(formatWeekShort('2026-01-22', 'de')).toBe('KW4');
+    expect(formatWeekShort('2026-01-22', 'en')).toBe('W4');
   });
 });
 

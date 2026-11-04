@@ -9,11 +9,19 @@ export type UsageSeriesState =
   | { status: 'error'; error: unknown }
   | { status: 'ready'; series: ProviderUsageSeries };
 
+/**
+ * How the buckets are chosen: `auto` picks days up to two months and weeks beyond,
+ * `day` and `week` pin one regardless of the range.
+ */
+export type SeriesResolution = 'auto' | SeriesGranularity;
+
 interface UsageSeriesResult {
   state: UsageSeriesState;
   granularity: SeriesGranularity;
-  forceDay: boolean;
-  setForceDay: (forceDay: boolean) => void;
+  /** The granularity `auto` would pick for the current range. */
+  autoGranularity: SeriesGranularity;
+  resolution: SeriesResolution;
+  setResolution: (resolution: SeriesResolution) => void;
 }
 
 /**
@@ -27,10 +35,11 @@ interface UsageSeriesResult {
  * refetches, which re-renders. Hold it in state or memoise it.
  */
 export function useUsageSeries(range: DateRange, provider?: Provider, selectedProviders?: Provider[]): UsageSeriesResult {
-  const [forceDay, setForceDay] = useState(false);
+  const [resolution, setResolution] = useState<SeriesResolution>('auto');
   // Beyond two months there are too many daily bars to read, so bucket by week unless
-  // the user insists on days via `setForceDay`.
-  const granularity: SeriesGranularity = forceDay || !exceedsMonths(range, 2) ? 'day' : 'week';
+  // the user pins a resolution.
+  const autoGranularity: SeriesGranularity = exceedsMonths(range, 2) ? 'week' : 'day';
+  const granularity: SeriesGranularity = resolution === 'auto' ? autoGranularity : resolution;
 
   // Callers resolve `range` on every render, so rebuild it from its dates: the effect
   // below needs an identity that changes only when the dates do.
@@ -78,5 +87,5 @@ export function useUsageSeries(range: DateRange, provider?: Provider, selectedPr
     };
   }, [requestKey, queryRange, granularity, provider, selectedProviders]);
 
-  return { state, granularity, forceDay, setForceDay };
+  return { state, granularity, autoGranularity, resolution, setResolution };
 }

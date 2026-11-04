@@ -1,0 +1,15 @@
+---
+// Title and lede for pages without React controls (the FAQ).
+interface Props {
+  title: string;
+  lede?: string;
+}
+const { title, lede } = Astro.props;
+---
+
+<div class="app-pagebar">
+  <div>
+    <h1 class="app-pagebar__title">{title}</h1>
+    {lede && <p class="app-pagebar__lede">{lede}</p>}
+  </div>
+</div>

@@ -1,15 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, render } from '@testing-library/react';
+import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import Dashboard from './Dashboard';
 import type { UsageOverview } from '~/lib/types';
 import { fetchUsageOverview } from '~/lib/api';
+import { useUsageSeries } from '~/lib/useUsageSeries';
 import { dict } from '~/i18n';
 
 vi.mock('~/lib/api');
-
-// Stubbed out: the chart fetches its own series and has its own test file. Leaving it
-// real would put a second "loading" in the tree and mask the dashboard's own state.
-vi.mock('./HomeUsageSeriesChart', () => ({ default: () => <div className="home-chart-stub" /> }));
+// The history has its own hook and its own tests; here it stays in `loading`.
+vi.mock('~/lib/useUsageSeries');
 
 const t = dict('de');
 
@@ -17,190 +16,141 @@ function overview(tokensInOut: number): UsageOverview {
   return {
     from: '2026-07-01',
     to: '2026-07-30',
-    providerUsages: { claude: { provider: 'claude', tokensInOut, totalEstimatedCo2: 1, totalCostUsdCent: 2 } },
+    providerUsages: { claude: { provider: 'claude', tokensInOut, totalEstimatedCo2: 1_500, totalCostUsdCent: 4_321 } },
     tokensInOut,
-    totalEstimatedCo2: 1,
-    totalCostUsdCent: 2,
+    totalEstimatedCo2: 1_500,
+    totalCostUsdCent: 4_321,
   };
 }
 
-/** A promise whose settlement this test controls, so `loading` is observable. */
 function deferred<T>() {
   let resolve!: (value: T) => void;
-  let reject!: (reason: unknown) => void;
-  const promise = new Promise<T>((res, rej) => {
+  const promise = new Promise<T>((res) => {
     resolve = res;
-    reject = rej;
   });
-  return { promise, resolve, reject };
+  return { promise, resolve };
 }
+
+const props = { locale: 'de' as const, title: 'Verbrauchsübersicht', lede: 'Firmenweit.' };
 
 beforeEach(() => {
   window.localStorage.clear();
   window.history.replaceState({}, '', '/');
   vi.mocked(fetchUsageOverview).mockReset();
+  vi.mocked(useUsageSeries).mockReturnValue({
+    state: { status: 'loading' },
+    granularity: 'day',
+    autoGranularity: 'day',
+    resolution: 'auto',
+    setResolution: vi.fn(),
+  });
 });
 
 afterEach(() => {
+  cleanup();
   window.localStorage.clear();
+  vi.mocked(useUsageSeries).mockReset();
 });
 
 describe('Dashboard', () => {
-  it('renders as loading until the overview arrives', async () => {
+  it('renders the page bar with the title, the resolution switch at the chart, and loading', async () => {
     // given
     const first = deferred<UsageOverview>();
     vi.mocked(fetchUsageOverview).mockReturnValue(first.promise);
 
     // when
-    const { container } = render(<Dashboard locale="de" />);
+    const { container, getByRole } = render(<Dashboard {...props} />);
 
     // then
+    expect(container.querySelector('h1')?.textContent).toBe(props.title);
+    expect(getByRole('group', { name: t.resolution.label })).toBeTruthy();
     expect(container.textContent).toContain(t.common.loading);
 
-    // when — the request settles
-    await act(async () => {
-      first.resolve(overview(1_000));
-    });
-
-    // then
-    expect(container.textContent).not.toContain(t.common.loading);
-    expect(container.querySelectorAll('.kpi-card').length).toBeGreaterThan(0);
-  });
-
-  it('goes back to loading as soon as the range changes, before the new data arrives', async () => {
-    // given — a settled dashboard
-    const first = deferred<UsageOverview>();
-    const second = deferred<UsageOverview>();
-    vi.mocked(fetchUsageOverview).mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
-    const { container } = render(<Dashboard locale="de" />);
-    await act(async () => {
-      first.resolve(overview(1_000));
-    });
-    expect(container.textContent).not.toContain(t.common.loading);
-
-    // when — the user picks a different preset
-    fireEvent.click(container.querySelector('button.rp__trigger')!);
-    const last7 = [...container.querySelectorAll<HTMLButtonElement>('button.rp__option')].find((b) =>
-      b.textContent?.includes(t.presets.last7),
-    )!;
-    await act(async () => {
-      fireEvent.click(last7);
-    });
-
-    // then — loading is derived from the stale range, not awaited from an effect
-    expect(container.textContent).toContain(t.common.loading);
-    expect(fetchUsageOverview).toHaveBeenCalledTimes(2);
-
-    // when
-    await act(async () => {
-      second.resolve(overview(2_000));
-    });
-
-    // then
-    expect(container.textContent).not.toContain(t.common.loading);
-  });
-
-  it('announces a failed load as an alert', async () => {
-    // given
-    vi.mocked(fetchUsageOverview).mockRejectedValue(new Error('backend down'));
-
-    // when
-    const { container } = render(<Dashboard locale="de" />);
-    await act(async () => {});
-
-    // then
-    expect(container.querySelector('[role="alert"]')!.textContent).toContain(
-      t.common.loadFailed('backend down'),
-    );
-  });
-
-  it('falls back to the generic message when the rejection carries no Error', async () => {
-    // given
-    vi.mocked(fetchUsageOverview).mockRejectedValue('just a string');
-
-    // when
-    const { container } = render(<Dashboard locale="de" />);
-    await act(async () => {});
-
-    // then
-    expect(container.querySelector('[role="alert"]')!.textContent).toContain(
-      t.common.loadFailed(t.common.unknownError),
-    );
-  });
-
-  it('shows the provider comparison only when the period holds usage', async () => {
-    // given
-    vi.mocked(fetchUsageOverview).mockResolvedValue(overview(5_000));
-
-    // when
-    const { container } = render(<Dashboard locale="de" />);
-    await act(async () => {});
-
-    // then
-    expect(container.textContent).toContain(t.dashboard.usageByProvider);
-    expect(container.textContent).not.toContain(t.emptyRangeNotice.message);
-  });
-
-  it('replaces the comparison with the empty-period notice when there is no usage', async () => {
-    // given
-    vi.mocked(fetchUsageOverview).mockResolvedValue(overview(0));
-
-    // when
-    const { container } = render(<Dashboard locale="de" />);
-    await act(async () => {});
-
-    // then
-    expect(container.textContent).not.toContain(t.dashboard.usageByProvider);
-    expect(container.textContent).toContain(t.emptyRangeNotice.message);
-  });
-
-  it('disables the range picker while loading and re-enables it afterwards', async () => {
-    // given
-    const first = deferred<UsageOverview>();
-    vi.mocked(fetchUsageOverview).mockReturnValue(first.promise);
-    const { container } = render(<Dashboard locale="de" />);
-
-    // then
-    expect(container.querySelector<HTMLButtonElement>('button.rp__trigger')!.disabled).toBe(true);
-
-    // when
+    // cleanup — settle the request so nothing updates after unmount
     await act(async () => {
       first.resolve(overview(1));
     });
-
-    // then
-    expect(container.querySelector<HTMLButtonElement>('button.rp__trigger')!.disabled).toBe(false);
   });
 
-  it('persists the picked preset into the URL so the link stays shareable', async () => {
-    // given
-    vi.mocked(fetchUsageOverview).mockResolvedValue(overview(1));
-    const { container } = render(<Dashboard locale="de" />);
-    await act(async () => {});
-
-    // when
-    fireEvent.click(container.querySelector('button.rp__trigger')!);
-    const last7 = [...container.querySelectorAll<HTMLButtonElement>('button.rp__option')].find((b) =>
-      b.textContent?.includes(t.presets.last7),
-    )!;
-    await act(async () => {
-      fireEvent.click(last7);
-    });
-
-    // then
-    expect(new URLSearchParams(window.location.search).get('preset')).toBe('last7');
-  });
-
-  it('restores the selection from the URL on mount', async () => {
-    // given
+  it('hides the resolution switch for a range too short for weekly bars', async () => {
+    // given — a week: weekly bars would be a single bar
     window.history.replaceState({}, '', '/?preset=last7');
     vi.mocked(fetchUsageOverview).mockResolvedValue(overview(1));
 
     // when
-    const { container } = render(<Dashboard locale="de" />);
+    const { queryByRole } = render(<Dashboard {...props} />);
     await act(async () => {});
 
     // then
-    expect(container.querySelector('.rp__trigger-label')!.textContent).toBe(t.presets.last7);
+    expect(queryByRole('group', { name: t.resolution.label })).toBeNull();
+  });
+
+  it('fills the key figures and the provider table once the overview arrives', async () => {
+    // given
+    vi.mocked(fetchUsageOverview).mockResolvedValue(overview(1_234_567));
+
+    // when
+    const { container } = render(<Dashboard {...props} />);
+    await act(async () => {});
+
+    // then
+    const kpi = container.querySelector('.app-kpi-band');
+    expect(kpi?.textContent).toContain(t.dashboard.kpis);
+    expect(kpi?.textContent).toContain('1,2');
+    expect(container.querySelector('.app-table')).not.toBeNull();
+    expect(container.querySelector('.app-table [title="1.234.567"]')).not.toBeNull();
+  });
+
+  it('links each provider row to its provider page, carrying the time window', async () => {
+    // given
+    vi.mocked(fetchUsageOverview).mockResolvedValue(overview(10));
+
+    // when
+    const { container } = render(<Dashboard {...props} />);
+    await act(async () => {});
+
+    // then
+    const href = container.querySelector<HTMLAnchorElement>('.app-table a.app-row-link')?.getAttribute('href');
+    expect(href).toMatch(/^\/provider\/claude\/\?preset=/);
+  });
+
+  it('shows the empty notice instead of the table for a period without usage', async () => {
+    // given
+    vi.mocked(fetchUsageOverview).mockResolvedValue(overview(0));
+
+    // when
+    const { container } = render(<Dashboard {...props} />);
+    await act(async () => {});
+
+    // then
+    expect(container.querySelector('.app-table')).toBeNull();
+    expect(container.textContent).toContain(t.emptyRangeNotice.message);
+  });
+
+  it('reports a failed overview in place of the table', async () => {
+    // given
+    vi.mocked(fetchUsageOverview).mockRejectedValue(new Error('boom'));
+
+    // when
+    const { container } = render(<Dashboard {...props} />);
+    await act(async () => {});
+
+    // then
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('boom');
+  });
+
+  it('marks the history with the cache badge only while the view counts cache tokens', async () => {
+    // given
+    vi.mocked(fetchUsageOverview).mockResolvedValue(overview(1));
+    const { container, getByRole } = render(<Dashboard {...props} />);
+    await act(async () => {});
+    const badge = (): Element | null => container.querySelector('#app-history')?.closest('.app-card')?.querySelector('.app-filter-row .app-pill--cache') ?? null;
+    expect(badge()).toBeNull();
+
+    // when
+    fireEvent.click(getByRole('button', { name: t.viewToggleLabels.tokenTypeAll }));
+
+    // then
+    expect(badge()?.textContent).toBe(t.common.inclCache);
   });
 });

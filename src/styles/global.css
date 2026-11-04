@@ -17,27 +17,6 @@ html, body {
 
 a { color: var(--neuland-link); }
 
-/* Header/footer width, matched to .app */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 var(--space-sm);
-}
-
-/* App-Shell */
-.app {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--space-md) var(--space-sm) 0;
-  min-height: 60vh;
-}
-
-/* Section heading */
-.section-title {
-  margin: var(--space-lg) 0 var(--space-sm);
-}
-.section-title:first-of-type { margin-top: var(--space-md); }
-
 /* Card — a UI surface, so a shadow is allowed here (unlike presentation surfaces) */
 .card {
   background: var(--bg-1);
@@ -46,70 +25,6 @@ a { color: var(--neuland-link); }
   box-shadow: var(--shadow-sm);
   padding: var(--space-sm);
 }
-
-/* KPI-Grid */
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: var(--space-sm);
-}
-
-.kpi-card {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.kpi-card__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-/* Totals row, sitting above the per-token-type cards */
-.kpi-summary-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-sm);
-  margin-bottom: var(--space-sm);
-}
-.kpi-card__label {
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-weight: var(--fw-semibold);
-}
-.kpi-card__icon { color: var(--neuland-dark-grey); flex-shrink: 0; }
-.kpi-card__value {
-  font-family: var(--font-sans);
-  font-size: var(--t-h2);
-  line-height: 1.05;
-  color: var(--fg-1);
-}
-.kpi-card__unit { font-size: var(--t-body); color: var(--fg-3); margin-left: 4px; }
-.kpi-card__sub { color: var(--fg-3); }
-
-/* Highlighted cards (totals, CO₂) */
-.kpi-card--accent {
-  background: var(--neuland-primary);
-  border-color: var(--neuland-primary);
-}
-.kpi-card--accent .kpi-card__label,
-.kpi-card--accent .kpi-card__value,
-.kpi-card--accent .kpi-card__sub { color: var(--fg-on-primary); }
-.kpi-card--accent .kpi-card__icon { color: var(--neuland-primary-light); }
-.kpi-card--accent .kpi-card__unit { color: rgba(255,255,255,0.8); }
-/* The asterisk is brand red, invisible on a red card */
-.kpi-card--accent .footnote-mark { color: var(--fg-on-primary); }
-
-.kpi-card--teal {
-  background: var(--neuland-accent-green);
-  border-color: var(--neuland-accent-green);
-}
-.kpi-card--teal .kpi-card__label,
-.kpi-card--teal .kpi-card__value,
-.kpi-card--teal .kpi-card__sub { color: var(--fg-on-primary); }
-.kpi-card--teal .kpi-card__icon { color: rgba(255,255,255,0.85); }
-.kpi-card--teal .kpi-card__unit { color: rgba(255,255,255,0.8); }
 
 /* Footnote asterisk next to a value, linking into the FAQ */
 .footnote-mark {
@@ -123,62 +38,6 @@ a { color: var(--neuland-link); }
   line-height: 0;
 }
 .footnote-mark:hover { text-decoration: underline; }
-
-/* CO₂ methodology note at the foot of the page */
-.methodology {
-  margin-top: var(--space-lg);
-  background: var(--bg-1);
-  border: 1px solid var(--bg-3);
-  border-left: 3px solid var(--neuland-primary);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  padding: var(--space-sm);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-}
-.methodology__title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  color: var(--fg-2);
-  font-weight: var(--fw-semibold);
-}
-.methodology__title > svg { color: var(--neuland-primary); flex-shrink: 0; }
-.methodology__star { color: var(--neuland-primary); }
-.methodology__body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  color: var(--fg-3);
-  max-width: 80ch;
-}
-.methodology__body p { margin: 0; }
-.methodology__body a { color: var(--neuland-link); }
-.methodology__list { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 4px; }
-.methodology__body strong { color: var(--fg-2); font-weight: var(--fw-semibold); }
-.methodology__caveat { color: var(--fg-3); font-style: italic; }
-
-/* Plugin tracking: user count next to the install hint */
-.plugin-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-  gap: var(--space-sm);
-  align-items: stretch;
-}
-.plugin-hint {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-xs);
-  border-left: 3px solid var(--neuland-primary);
-}
-.plugin-hint__icon { color: var(--neuland-primary); flex-shrink: 0; margin-top: 2px; }
-.plugin-hint__body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.plugin-hint__title { margin: 0; font-weight: var(--fw-semibold); color: var(--fg-1); }
-.plugin-hint__text { margin: 0; max-width: 70ch; }
-.plugin-hint__text strong { color: var(--fg-2); font-weight: var(--fw-semibold); }
-.plugin-hint__text a { color: var(--neuland-link); }
 
 /* Plugin install/uninstall command, copy-to-clipboard */
 .install-command {
@@ -205,34 +64,6 @@ a { color: var(--neuland-link); }
 }
 .install-command__copy:hover { color: var(--fg-1); }
 
-/* Back link on provider pages */
-.back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: var(--space-sm);
-  color: var(--fg-3);
-  font-size: var(--t-small);
-  text-decoration: none;
-  transition: color var(--ease-fast);
-}
-.back-link:hover { color: var(--neuland-primary); }
-
-/* Provider links in the comparison table */
-.provider-link {
-  color: var(--neuland-link);
-  text-decoration: none;
-  font-weight: var(--fw-semibold);
-}
-.provider-link:hover { text-decoration: underline; }
-.provider-link--detail {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  font-weight: var(--fw-book);
-  white-space: nowrap;
-}
-
 /* ============================================================
    DATE RANGE PICKER — trigger + overlay
    ============================================================ */
@@ -240,32 +71,6 @@ a { color: var(--neuland-link); }
   position: relative;
   margin-top: var(--space-sm);
 }
-/* Inline in a section heading: no extra top spacing */
-.section-title .rp { margin-top: 0; }
-
-/* On its own row, without a heading: align right */
-.picker-row {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-sm);
-  margin-top: var(--space-sm);
-}
-.picker-row .rp { margin-top: 0; }
-.section-title .picker-row { margin-top: 0; }
-
-/* Checkbox forcing day buckets even on long ranges */
-.force-day-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-sans);
-  font-size: var(--t-small);
-  color: var(--fg-2);
-  cursor: pointer;
-  white-space: nowrap;
-}
-.force-day-toggle input { cursor: pointer; }
 
 /* View switcher above the history charts */
 .view-toggle {
@@ -502,32 +307,12 @@ a { color: var(--neuland-link); }
   height: clamp(240px, 42vw, 380px);
 }
 
-/* Scroll wide tables horizontally rather than breaking the layout */
-.table-scroll {
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-.table-scroll .ds-table { min-width: 560px; }
-
 /* ============================================================
    RESPONSIVE
    ============================================================ */
 
-/* Tablet */
-@media (max-width: 768px) {
-  .app { padding: var(--space-sm) var(--space-sm) 0; }
-  .kpi-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
-  .kpi-summary-row { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
-  .kpi-card__value { font-size: var(--t-h3); }
-  .plugin-grid { grid-template-columns: 1fr; }
-}
-
 /* Phone */
 @media (max-width: 480px) {
-  .app { padding: var(--space-sm) 16px 0; }
-  .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  .kpi-card { padding: 16px; }
   .chart-card { padding: 14px; }
 }
 
