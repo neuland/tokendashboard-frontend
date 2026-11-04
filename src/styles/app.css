@@ -12,7 +12,7 @@
   --app-accent-text: #D63F3A;  /* brand red, darkened for small text */
   --app-sidebar-w: 248px;
   --app-rail-w: 320px;
-  /* Grey of every command box: the plugin's install line and the local server commands */
+  /* Grey of the plugin's install line, also the track of the segmented controls */
   --app-cmd-bg: #F1EEE9;
   --app-radius: 12px;
   /* Page behind the cards: a step darker than the brand's warm white (#F8F7F5), so the
@@ -340,34 +340,7 @@ html.app-collapsed .app-sidebar__foot { opacity: 0; visibility: hidden; transiti
 .app .app-stack .install-command { margin: 0; }
 .app .app-stack .ds-small { font-size: 14px; line-height: 1.5; }
 
-/* ---------- Command box, buttons, pills ---------- */
-.app-cmd {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin: 0;
-  padding: 10px 10px 10px 14px;
-  border-radius: 8px;
-  background: var(--app-cmd-bg);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  line-height: 1.5;
-}
-/* Long commands wrap so the whole line is visible before copying */
-.app-cmd__code { flex: 1 1 auto; min-width: 0; white-space: pre-wrap; word-break: break-all; }
-.app-cmd__copy {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 1px;
-  color: var(--app-muted);
-}
-.app-cmd__copy:hover { color: var(--app-ink); }
-
+/* ---------- Buttons, pills ---------- */
 .app-button {
   font: inherit;
   font-size: 13px;
@@ -462,7 +435,7 @@ html.app-collapsed .app-sidebar__foot { opacity: 0; visibility: hidden; transiti
 .app .rp__trigger { border-radius: 8px; box-shadow: none; }
 .app .card { box-shadow: none; }
 .app .status { min-height: 120px; }
-/* Same box as .app-cmd: label on its own line, the command wrapping, the copy button at the right */
+/* Grey box: label on its own line, the command wrapping, the copy button at the right */
 .app .install-command {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

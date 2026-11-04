@@ -8,25 +8,19 @@ import { dict, type Locale } from '~/i18n';
 import ViewToggle from './ViewToggle';
 import ChartStatus from './ChartStatus';
 import EmptyRangeNotice from './EmptyRangeNotice';
-import { FaqAsterisk, type FaqAsteriskKind } from './FaqAsterisk';
 import SeriesBarChart from './SeriesBarChart';
 import { renderProviderUsageBars } from './ProviderUsageBars';
 import ResolutionToggle, { canSwitchResolution } from './ResolutionToggle';
 import SectionCard from './SectionCard';
 import CacheBadge from './CacheBadge';
 
-export const PROVIDER_VIEWS: View[] = ['tokenType', 'tokenTypeAll', 'model', 'co2', 'cost', 'installations', 'tokensPerInstallation'];
-/** One machine is one installation, so the local pages leave the installation views out. */
-export const LOCAL_VIEWS: View[] = ['tokenType', 'tokenTypeAll', 'model', 'co2', 'cost'];
+const PROVIDER_VIEWS: View[] = ['tokenType', 'tokenTypeAll', 'model', 'co2', 'cost', 'installations', 'tokensPerInstallation'];
 
 interface Props {
   series: ReturnType<typeof useUsageSeries>;
   range: DateRange;
   view: View;
   onViewChange: (view: View) => void;
-  views?: View[];
-  /** FAQ mark after the title; the local pages link why older days can still grow. */
-  faqMark?: FaqAsteriskKind;
   locale: Locale;
 }
 
@@ -35,7 +29,7 @@ interface Props {
  * range allows it, and the stacked chart by token type or model family. Used by the
  * provider pages.
  */
-export default function ProviderHistoryCard({ series, range, view, onViewChange, views = PROVIDER_VIEWS, faqMark, locale }: Props): JSX.Element {
+export default function ProviderHistoryCard({ series, range, view, onViewChange, locale }: Props): JSX.Element {
   const t = dict(locale);
 
   let history: JSX.Element;
@@ -60,7 +54,7 @@ export default function ProviderHistoryCard({ series, range, view, onViewChange,
 
   return (
     <SectionCard
-      title={faqMark ? <span>{t.dashboard.history}<FaqAsterisk kind={faqMark} locale={locale} /></span> : t.dashboard.history}
+      title={t.dashboard.history}
       aside={
         canSwitchResolution(rangeDays(range)) && (
           <>
@@ -72,7 +66,7 @@ export default function ProviderHistoryCard({ series, range, view, onViewChange,
       headingId="app-history"
     >
       <div className="app-filter-row">
-        <ViewToggle views={views} active={view} onChange={onViewChange} locale={locale} />
+        <ViewToggle views={PROVIDER_VIEWS} active={view} onChange={onViewChange} locale={locale} />
         {view === 'tokenTypeAll' && <span className="app-filter-row__end"><CacheBadge locale={locale} /></span>}
       </div>
       {history}

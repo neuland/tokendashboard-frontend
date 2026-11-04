@@ -18,24 +18,6 @@ import { FetchError } from './errors';
 /** Empty means same origin; see `PUBLIC_API_BASE` in `env.d.ts`. */
 const API_BASE = import.meta.env.PUBLIC_API_BASE ?? '';
 
-/**
- * Where the usage routes live. The backend is the default; the plugin's local server
- * answers the same routes on 127.0.0.1 and wants a token.
- */
-export interface ApiOptions {
-  baseUrl?: string;
-  token?: string;
-  /** Added to every request, e.g. the local server's `project` filter. */
-  params?: Record<string, string>;
-}
-
-export interface ApiClient {
-  fetchProviderUsage: (provider: Provider, range: DateRange) => Promise<ProviderUsage>;
-  fetchUsageOverview: (range: DateRange) => Promise<UsageOverview>;
-  fetchProviderUsageSeries: (provider: Provider, range: DateRange, granularity?: SeriesGranularity) => Promise<ProviderUsageSeries>;
-  fetchAllUsageSeries: (range: DateRange, granularity?: SeriesGranularity, selectedProviders?: Provider[]) => Promise<ProviderUsageSeries>;
-}
-
 /** Version segment for all `/api/usage/*` routes. */
 const API_VERSION_1 = 'v1';
 
@@ -154,46 +136,19 @@ function parseProviderUsage(provider: Provider, json: RawUsageResponse): Provide
   };
 }
 
-/** The four usage routes against one base URL, with the local server's token when given. */
-export function createApi({ baseUrl = API_BASE, token, params: extra = {} }: ApiOptions = {}): ApiClient {
-  const get = async (path: string, params: URLSearchParams): Promise<unknown> => {
-    for (const [key, value] of Object.entries(extra)) {
-      params.set(key, value);
-    }
-    if (token) {
-      params.set('token', token);
-    }
-    const res = await fetch(`${baseUrl}${path}?${params}`);
-    if (!res.ok) {
-      throw new FetchError(res.status);
-    }
-    return res.json();
-  };
-  return {
-    async fetchProviderUsage(provider, range) {
-      const params = new URLSearchParams({ from: range.from, to: range.to });
-      return parseProviderUsage(provider, (await get(`/api/usage/${provider}/${API_VERSION_1}`, params)) as RawUsageResponse);
-    },
-    async fetchUsageOverview(range) {
-      const params = new URLSearchParams({ from: range.from, to: range.to });
-      return parseUsageOverview(range, (await get(`/api/usage/all/${API_VERSION_1}`, params)) as RawOverviewResponse);
-    },
-    async fetchProviderUsageSeries(provider, range, granularity = 'day') {
-      const params = new URLSearchParams({ from: range.from, to: range.to, granularity });
-      return parseUsageSeries(range, (await get(`/api/usage/${provider}/series/${API_VERSION_1}`, params)) as RawSeriesResponse, granularity);
-    },
-    async fetchAllUsageSeries(range, granularity = 'day', selectedProviders = ACTIVE_PROVIDERS) {
-      const params = new URLSearchParams({ from: range.from, to: range.to, granularity });
-      return parseAllUsageSeries(range, (await get(`/api/usage/all/series/${API_VERSION_1}`, params)) as RawAllSeriesResponse, granularity, selectedProviders);
-    },
-  };
+async function get(path: string, params: URLSearchParams): Promise<unknown> {
+  const res = await fetch(`${API_BASE}${path}?${params}`);
+  if (!res.ok) {
+    throw new FetchError(res.status);
+  }
+  return res.json();
 }
 
-/** The backend, which is where every page reads from unless told otherwise. */
-export const backendApi: ApiClient = createApi();
-
 /** One provider's totals and per-model breakdown for `range`. */
-export const fetchProviderUsage: ApiClient['fetchProviderUsage'] = (provider, range) => backendApi.fetchProviderUsage(provider, range);
+export async function fetchProviderUsage(provider: Provider, range: DateRange): Promise<ProviderUsage> {
+  const params = new URLSearchParams({ from: range.from, to: range.to });
+  return parseProviderUsage(provider, (await get(`/api/usage/${provider}/${API_VERSION_1}`, params)) as RawUsageResponse);
+}
 
 function parseUsageOverview(range: DateRange, json: RawOverviewResponse): UsageOverview {
   const providerUsages: Partial<Record<Provider, ProviderOverview>> = {};
@@ -229,7 +184,10 @@ function parseUsageOverview(range: DateRange, json: RawOverviewResponse): UsageO
 }
 
 /** Company-wide totals, one entry per provider, for `range`. */
-export const fetchUsageOverview: ApiClient['fetchUsageOverview'] = (range) => backendApi.fetchUsageOverview(range);
+export async function fetchUsageOverview(range: DateRange): Promise<UsageOverview> {
+  const params = new URLSearchParams({ from: range.from, to: range.to });
+  return parseUsageOverview(range, (await get(`/api/usage/all/${API_VERSION_1}`, params)) as RawOverviewResponse);
+}
 
 interface RawSeriesBucket {
   date: string; // ISO YYYY-MM-DD; for granularity=week the Monday of that week
@@ -427,13 +385,25 @@ function parseAllUsageSeries(
 }
 
 /** Daily or weekly history for a single provider over `range`. */
-export const fetchProviderUsageSeries: ApiClient['fetchProviderUsageSeries'] = (provider, range, granularity) =>
-  backendApi.fetchProviderUsageSeries(provider, range, granularity);
+export async function fetchProviderUsageSeries(
+  provider: Provider,
+  range: DateRange,
+  granularity: SeriesGranularity = 'day',
+): Promise<ProviderUsageSeries> {
+  const params = new URLSearchParams({ from: range.from, to: range.to, granularity });
+  return parseUsageSeries(range, (await get(`/api/usage/${provider}/series/${API_VERSION_1}`, params)) as RawSeriesResponse, granularity);
+}
 
 /**
  * Daily or weekly history over `range`, aggregated across `selectedProviders`.
  * The endpoint always returns every provider, so changing the selection re-aggregates
  * client-side rather than issuing a different request.
  */
-export const fetchAllUsageSeries: ApiClient['fetchAllUsageSeries'] = (range, granularity, selectedProviders) =>
-  backendApi.fetchAllUsageSeries(range, granularity, selectedProviders);
+export async function fetchAllUsageSeries(
+  range: DateRange,
+  granularity: SeriesGranularity = 'day',
+  selectedProviders: Provider[] = ACTIVE_PROVIDERS,
+): Promise<ProviderUsageSeries> {
+  const params = new URLSearchParams({ from: range.from, to: range.to, granularity });
+  return parseAllUsageSeries(range, (await get(`/api/usage/all/series/${API_VERSION_1}`, params)) as RawAllSeriesResponse, granularity, selectedProviders);
+}

@@ -12,14 +12,12 @@ interface Props {
   crumbs?: Crumb[];
   /** A small marker in front of the title, e.g. a provider colour dot. */
   marker?: ReactNode;
-  /** Sits right after the title, e.g. a project's favourite star. */
-  afterTitle?: ReactNode;
   /** The page's controls, right-aligned: range picker, resolution, filters. */
   children?: ReactNode;
 }
 
 /** Page head: title and lede on the left, the page's controls on the right. */
-export default function PageBar({ title, lede, crumbs, marker, afterTitle, children }: Props): JSX.Element {
+export default function PageBar({ title, lede, crumbs, marker, children }: Props): JSX.Element {
   return (
     <div className="app-pagebar">
       <div>
@@ -38,7 +36,6 @@ export default function PageBar({ title, lede, crumbs, marker, afterTitle, child
             {marker}
             {title}
           </h1>
-          {afterTitle}
         </div>
         {lede && <p className="app-pagebar__lede">{lede}</p>}
       </div>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Provider, ProviderUsageSeries, SeriesGranularity } from './types';
-import { fetchAllUsageSeries, fetchProviderUsageSeries, type ApiClient } from './api';
+import { fetchAllUsageSeries, fetchProviderUsageSeries } from './api';
 import type { DateRange } from './range';
 import { exceedsMonths } from './range';
 
@@ -14,11 +14,6 @@ export type UsageSeriesState =
  * `day` and `week` pin one regardless of the range.
  */
 export type SeriesResolution = 'auto' | SeriesGranularity;
-
-/** What the hook needs from a client; the module's own functions are the backend. */
-export type SeriesApi = Pick<ApiClient, 'fetchProviderUsageSeries' | 'fetchAllUsageSeries'>;
-
-const backendSeriesApi: SeriesApi = { fetchProviderUsageSeries, fetchAllUsageSeries };
 
 interface UsageSeriesResult {
   state: UsageSeriesState;
@@ -39,10 +34,7 @@ interface UsageSeriesResult {
  * render sends the effect into a loop: each pass hands it a new identity, which
  * refetches, which re-renders. Hold it in state or memoise it.
  */
-export function useUsageSeries(range: DateRange, provider?: Provider, selectedProviders?: Provider[], api?: SeriesApi): UsageSeriesResult {
-  // `api` must keep a stable identity like `selectedProviders` (it is an effect dependency);
-  // callers memoise it or leave it out for the backend.
-  const client = api ?? backendSeriesApi;
+export function useUsageSeries(range: DateRange, provider?: Provider, selectedProviders?: Provider[]): UsageSeriesResult {
   const [resolution, setResolution] = useState<SeriesResolution>('auto');
   // Beyond two months there are too many daily bars to read, so bucket by week unless
   // the user pins a resolution.
@@ -70,8 +62,8 @@ export function useUsageSeries(range: DateRange, provider?: Provider, selectedPr
   useEffect(() => {
     let active = true;
     const fetchSeries = provider
-      ? client.fetchProviderUsageSeries(provider, queryRange, granularity)
-      : client.fetchAllUsageSeries(queryRange, granularity, selectedProviders);
+      ? fetchProviderUsageSeries(provider, queryRange, granularity)
+      : fetchAllUsageSeries(queryRange, granularity, selectedProviders);
     fetchSeries
       .then((series) => {
         if (active) {
@@ -93,7 +85,7 @@ export function useUsageSeries(range: DateRange, provider?: Provider, selectedPr
     return () => {
       active = false;
     };
-  }, [requestKey, queryRange, granularity, provider, selectedProviders, client]);
+  }, [requestKey, queryRange, granularity, provider, selectedProviders]);
 
   return { state, granularity, autoGranularity, resolution, setResolution };
 }

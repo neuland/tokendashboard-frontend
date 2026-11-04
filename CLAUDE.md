@@ -269,8 +269,7 @@ Pages: `/`, `/provider/[provider]/`, `/faq/` (and `/en/…`).
 - **Restyled components.** `DateRangePicker`, `ViewToggle`, `ProviderFilter`,
   `SeriesBarChart`, `ChartStatus` and `InstallCommand` bring their own classes from `global.css`;
   `app.css` restyles them under `.app`, the class on `<body>`.
-  `InstallCommand` and `CommandBox` (the grey terminal line on the local
-  pages) share `src/lib/useCopy.ts`; both boxes use the same `--app-cmd-bg` grey.
+  `InstallCommand` copies through `src/lib/useCopy.ts`; its box uses the `--app-cmd-bg` grey.
   The FAQ markup lives in `src/components/faq/Faq{De,En}.astro` and is mounted by
   the FAQ pages — `faqAnchors.test.ts` reads those components, not the pages.
 - **Resolution.** `useUsageSeries` carries `resolution` (`auto | day | week`) and
@@ -303,8 +302,3 @@ Pages: `/`, `/provider/[provider]/`, `/faq/` (and `/en/…`).
   class `app-collapsed` on `<html>`, remembered under `tokendashboard.nav` and applied
   before paint). A nav item can be teased (`soon`, a non-link with a "bald" badge) or marked
   `beta`; on `main` none is.
-- **Building blocks for upcoming areas.** Pages such as "Dieser Rechner", "Projekte" and
-  "Experimente" are not part of this repository yet. It keeps only the shared building
-  blocks they reuse: `createApi({ baseUrl, token, params })` in `src/lib/api.ts` (the
-  module-level fetch functions are the backend client, `backendApi`), `LOCAL_VIEWS` and
-  `faqMark` on `ProviderHistoryCard`.
