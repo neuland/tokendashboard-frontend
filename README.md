@@ -1,5 +1,10 @@
 # neuland Token & CO₂ Dashboard – Frontend
 
+> **This repository has moved.** The frontend now lives in the monorepo
+> [neuland/tokendashboard](https://github.com/neuland/tokendashboard), folder
+> [`frontend/`](https://github.com/neuland/tokendashboard/tree/main/frontend), with its
+> full history. This repository is archived and read-only.
+
 Part of a system that measures companies’ token usage.
 It requires the backend, the frontend and at least one plugin that sends the data.
 This is the frontend repository.   
